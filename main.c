@@ -11,27 +11,21 @@
 //
 // ssize_t getline(char **lineptr, size_t *n, FILE *stream);
 
-
 #include <stdio.h>
 #include <stdlib.h>
 
-void readLine();                                // accepts user message, buffer size dynamically allocated
-void printLine();                               // prints message into stdout
-
-void readLine() {
+char* readLine() {
         char *line = NULL;
         size_t len = 0;                         // unsigned type, non-negative value (8 BYTES)
-        ssize_t read;                           // signed type (8 BYTES)
+        ssize_t read;                           // signed type (8 BYTES), return type needed by getline()
 
         read = getline(&line, &len, stdin);     // getline reads a line from stream (stdin), stores addr of buffer into *line
-        free(line);                             // free allocation of memory the *line was using to store message
-}
+        return line;
 
-void printLine() {
-        // get line from readLine() and print it out
-        printf("andrew says: %s\n", line);
+        free(line);                             // free the memory allocation for line pointer
 }
 
 int main() {
-    readLine();
+        printf("andrew: %s\n", readLine());
 }
+
