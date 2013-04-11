@@ -41,7 +41,6 @@ Design Details
         ./qChat NICKNAME                    // STARTS CHAT ON DEFAULT NETWORK INTERFACE
         ./qChat NICKNAME IP_ADDRESS:PORT    // STARTS CHAT ON SPECIFIED IP:PORT
 
-GORY DETAILS:
     IF user creates new chat:
         begin listening on network interface
         sets leaderCheck();
@@ -62,8 +61,6 @@ GORY DETAILS:
         addUser() -             adds self into the user list, maintained by each client
         listUsers() -           lists current members in the chat, asterisk next to the current leader (includes IP:PORT of each member)
 
-    Leader Functions (members only have access to these if isLeader() returns TRUE):
-
         msgBufRaw() -           raw messages received by members
         msgBufSorted() -        timestamped, ordered messages ready to be sent to group
 
@@ -74,21 +71,68 @@ GORY DETAILS:
                  struct unordered                   // raw message from client
                     unsigned long int timestamp;    // timestamp of local machine of when msg was sent by user
                     char *msg;                      // var. length message
-                    bool mode;                      // returns 0 for chat mode, 1 for system mode
-                                                    // marks message as system event or chat message
-                                                    // system mode messages bypass sorting are sent to group
+                    int mode;                       // [0] - Chat Mode
+                                                    // [1] - System Message
+                                                    // [2] - Leader Election Message
     
                 struct ordered                      // message processed by sequencer and ready to send to group
                     unsigned long int timestamp;    
-                    char *ptr message;
+                    char *msg;
                     int seq_num;                    // UID assigned for sequencing messages into correct order
 
+
+                struct userList {
+                    unsigned long int timestamp;    // timestamp of users arrival into chat (FOR LEADER ELECTION)
+                    char *usrName;                  // username (NICK) of the user
+                    char *ipAddr;                   // the IP ADDRESS of the user
+                    char *port;                     // source port of the user
+                    bool isLeader;                  // set as TRUE if user is the leader, otherwise FALSE
+
+
+    Sending
+        Data Objects are converted into Bytes wrapped in UDP and sent out
+    Receiving
+        Bytes are converted back into Data Objects
+
+#TODO:
+# DO WE NEED TO SEND LENGTHS FOR VARIABLE-LENGTH DATA? (message, username)
+# IS THE LEADER DOING ANY CONCURRENCY?
 
     NOTES: So we have unordered and ordered message formats, defined inside their own structs. Each has their own data
     fields. Unordered messages are created by a client and sent to the leader, processed and either sent to queue (msg)
     or sent directly to users (system events.) 
 
     Messages are crafted locally by each client and sent via UDP to everyone else in the group through a multicast protocol.
-    Messages are first received by the leader/sequencer, who tags them with a seq_num, sorts them into an ordered buffer
+    Messages are received by the leader/sequencer, who tags them with a seq_num, sorts them into an ordered buffer
     and begins sending them back out to everyone through the printMsg(). 
+    
+    Asynchronous UDP Communication
+        qChat will rely on asynch. UDP communication.
+            SENDS REQUEST (RPC)
+            WAITS FOR ACCEPTANCE
+            ACCEPTS REQUEST
+
+        Multicast Groups will be used for the chat, group is created for a new chat group and users are subscribed when
+        logging in for the first time. This will allow for a group list of users who receive messages from this chat
+        group, and it will allow multiple chat groups to exist! 
+
+    Error control scheme for UDP
+        Every user is going to keep a message queue{TIMESTAMP, NICKNAME, MSG} and each client will wait for an acknowledgement
+        from the leader that message has been received. If an acknowledgement is not received by the leader/sequencer, the
+        process is halted, message queue continues storing messages of MODE[0], and if the leader/sequencer is responsive,
+        then the leader/sequencer does a sorting check on the message queue. Since each user is retaining a queue of the
+        messages (WHO SENT IT and WHAT TIME it was sent) we can verify completeness of the chat. 
+
+    Leader Election
+        On an event (usually, a message not been acknowledged by the leader) a user can call an election to determine if the
+        leader is still active and processing messages, and if not who is going to take his place. When an election is called
+        a message (MODE[2]) is used to send communication to all users in the chat group. The list of current active users
+        will be used to elect a new leader. The first name of the list will compare his timestamp against the next user in the
+        list, whichever has the EARLIER timestamp wins that round and proceeds to the next user, this happens until there is
+        only one user left, who is then elected the new leader/sequencer.
+
+
+
+
+
 
