@@ -1,18 +1,28 @@
 //
 //  main.cpp
-//  qchat
+//  qchat - a distributed chat program with the following features
+//      - Fully-ordered Multicast UDP Protocol
+//      - Sequencer-Client Model implementing an election protocol for failure recovery
+//      - Automatic Recovery from UDP-based failures
 //
-//  Created by q on 4/16/13.
-//  Copyright (c) 2013 theqlabs. All rights reserved.
+//  @authors:
+//  Andrew Righter - @theqlabs (GitHub/Twitter)
+//  Michael Collis
 //
 
 #include <iostream>
 
-int main(int argc, const char * argv[])
-{
+using namespace std;
 
-    // insert code here...
-    std::cout << "Hello, World!\n";
+int main(int argc, const char * argv[]) {
+
+    string usrName = "";
+    
+    cout << "Please enter your username: ";
+    cin >> usrName;
+    cout << "Hello " << usrName << endl;
+    
     return 0;
+
 }
 
