@@ -7,8 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		1010B6C1171DC97F0001A690 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1010B6C0171DC97F0001A690 /* main.cpp */; };
 		1010B6C3171DC97F0001A690 /* qchat.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = 1010B6C2171DC97F0001A690 /* qchat.1 */; };
+		1010B6CB171E44C80001A690 /* qchat_client.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1010B6CA171E44C80001A690 /* qchat_client.cpp */; };
+		1010B6CD171E44D70001A690 /* qchat_server.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1010B6CC171E44D70001A690 /* qchat_server.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -26,8 +27,10 @@
 
 /* Begin PBXFileReference section */
 		1010B6BD171DC97F0001A690 /* qchat */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = qchat; sourceTree = BUILT_PRODUCTS_DIR; };
-		1010B6C0171DC97F0001A690 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		1010B6C2171DC97F0001A690 /* qchat.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = qchat.1; sourceTree = "<group>"; };
+		1010B6C9171DE7C30001A690 /* qchat.x */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = qchat.x; sourceTree = "<group>"; };
+		1010B6CA171E44C80001A690 /* qchat_client.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = qchat_client.cpp; sourceTree = "<group>"; };
+		1010B6CC171E44D70001A690 /* qchat_server.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = qchat_server.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -60,7 +63,9 @@
 		1010B6BF171DC97F0001A690 /* qchat */ = {
 			isa = PBXGroup;
 			children = (
-				1010B6C0171DC97F0001A690 /* main.cpp */,
+				1010B6CA171E44C80001A690 /* qchat_client.cpp */,
+				1010B6CC171E44D70001A690 /* qchat_server.cpp */,
+				1010B6C9171DE7C30001A690 /* qchat.x */,
 				1010B6C2171DC97F0001A690 /* qchat.1 */,
 			);
 			path = qchat;
@@ -117,7 +122,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				1010B6C1171DC97F0001A690 /* main.cpp in Sources */,
+				1010B6CB171E44C80001A690 /* qchat_client.cpp in Sources */,
+				1010B6CD171E44D70001A690 /* qchat_server.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
