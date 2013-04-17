@@ -94,10 +94,6 @@ Design Details
     Receiving
         Bytes are converted back into Data Objects
 
-#TODO:
-# DO WE NEED TO SEND LENGTHS FOR VARIABLE-LENGTH DATA? (message, username)
-# IS THE LEADER DOING ANY CONCURRENCY?
-
     NOTES: So we have unordered and ordered message formats, defined inside their own structs. Each has their own data
     fields. Unordered messages are created by a client and sent to the leader, processed and either sent to queue (msg)
     or sent directly to users (system events.) 
