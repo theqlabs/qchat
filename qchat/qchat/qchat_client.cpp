@@ -20,7 +20,6 @@
 
 using namespace std;
 
-// removed const from arg vector to satisfy throwing argv[2] into char *host;
 int main(int argc, char * argv[]) {
     
   CLIENT *clnt;
