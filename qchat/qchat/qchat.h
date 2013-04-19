@@ -10,24 +10,121 @@
 
 #include <rpc/rpc.h>
 
+#define MAX_MSG_LEN 512
+#define MAX_USR_LEN 32
+
+typedef char *msg_send;
+#ifdef __cplusplus
+extern "C" bool_t xdr_msg_send(XDR *, msg_send*);
+#elif __STDC__
+extern  bool_t xdr_msg_send(XDR *, msg_send*);
+#else /* Old Style C */
+bool_t xdr_msg_send();
+#endif /* Old Style C */
+
+
+typedef char *uname;
+#ifdef __cplusplus
+extern "C" bool_t xdr_uname(XDR *, uname*);
+#elif __STDC__
+extern  bool_t xdr_uname(XDR *, uname*);
+#else /* Old Style C */
+bool_t xdr_uname();
+#endif /* Old Style C */
+
+
+struct cname {
+	char *uname;
+	char *ip_port;
+	struct {
+		u_int leader_flag_len;
+		bool_t *leader_flag_val;
+	} leader_flag;
+};
+typedef struct cname cname;
+#ifdef __cplusplus
+extern "C" bool_t xdr_cname(XDR *, cname*);
+#elif __STDC__
+extern  bool_t xdr_cname(XDR *, cname*);
+#else /* Old Style C */
+bool_t xdr_cname();
+#endif /* Old Style C */
+
+
+struct msg_recv {
+	struct {
+		u_int msg_sent_len;
+		msg_send *msg_sent_val;
+	} msg_sent;
+	struct {
+		u_int user_sent_len;
+		uname *user_sent_val;
+	} user_sent;
+	int seq_num;
+};
+typedef struct msg_recv msg_recv;
+#ifdef __cplusplus
+extern "C" bool_t xdr_msg_recv(XDR *, msg_recv*);
+#elif __STDC__
+extern  bool_t xdr_msg_recv(XDR *, msg_recv*);
+#else /* Old Style C */
+bool_t xdr_msg_recv();
+#endif /* Old Style C */
+
 
 #define QCHAT ((rpc_uint)0x20000001)
 #define QCHATVERS ((rpc_uint)1)
 
 #ifdef __cplusplus
-#define PRINTMESSAGE ((rpc_uint)1)
-extern "C" void * printmessage_1(char **, CLIENT *);
-extern "C" void * printmessage_1_svc(char **, struct svc_req *);
+#define JOIN ((rpc_uint)1)
+extern "C" int * join_1(cname *, CLIENT *);
+extern "C" int * join_1_svc(cname *, struct svc_req *);
+#define SEND ((rpc_uint)2)
+extern "C" int * send_1(msg_send *, CLIENT *);
+extern "C" int * send_1_svc(msg_send *, struct svc_req *);
+#define DELIVER ((rpc_uint)3)
+extern "C" int * deliver_1(msg_recv *, CLIENT *);
+extern "C" int * deliver_1_svc(msg_recv *, struct svc_req *);
+#define LISTNAMES ((rpc_uint)4)
+extern "C" int * listnames_1(cname *, CLIENT *);
+extern "C" int * listnames_1_svc(cname *, struct svc_req *);
+#define REQ_MSG ((rpc_uint)5)
+extern "C" msg_recv * req_msg_1(seq_num *, CLIENT *);
+extern "C" msg_recv * req_msg_1_svc(seq_num *, struct svc_req *);
 
 #elif __STDC__
-#define PRINTMESSAGE ((rpc_uint)1)
-extern  void * printmessage_1(char **, CLIENT *);
-extern  void * printmessage_1_svc(char **, struct svc_req *);
+#define JOIN ((rpc_uint)1)
+extern  int * join_1(cname *, CLIENT *);
+extern  int * join_1_svc(cname *, struct svc_req *);
+#define SEND ((rpc_uint)2)
+extern  int * send_1(msg_send *, CLIENT *);
+extern  int * send_1_svc(msg_send *, struct svc_req *);
+#define DELIVER ((rpc_uint)3)
+extern  int * deliver_1(msg_recv *, CLIENT *);
+extern  int * deliver_1_svc(msg_recv *, struct svc_req *);
+#define LISTNAMES ((rpc_uint)4)
+extern  int * listnames_1(cname *, CLIENT *);
+extern  int * listnames_1_svc(cname *, struct svc_req *);
+#define REQ_MSG ((rpc_uint)5)
+extern  msg_recv * req_msg_1(seq_num *, CLIENT *);
+extern  msg_recv * req_msg_1_svc(seq_num *, struct svc_req *);
 
 #else /* Old Style C */
-#define PRINTMESSAGE ((rpc_uint)1)
-extern  void * printmessage_1();
-extern  void * printmessage_1_svc();
+#define JOIN ((rpc_uint)1)
+extern  int * join_1();
+extern  int * join_1_svc();
+#define SEND ((rpc_uint)2)
+extern  int * send_1();
+extern  int * send_1_svc();
+#define DELIVER ((rpc_uint)3)
+extern  int * deliver_1();
+extern  int * deliver_1_svc();
+#define LISTNAMES ((rpc_uint)4)
+extern  int * listnames_1();
+extern  int * listnames_1_svc();
+#define REQ_MSG ((rpc_uint)5)
+extern  msg_recv * req_msg_1();
+extern  msg_recv * req_msg_1_svc();
 #endif /* Old Style C */
 
 #endif /* !_QCHAT_H_RPCGEN */

@@ -78,7 +78,11 @@ static void
 qchat_1(struct svc_req *rqstp, SVCXPRT *transp)
 {
 	union {
-		char *printmessage_1_arg;
+		cname join_1_arg;
+		msg_send send_1_arg;
+		msg_recv deliver_1_arg;
+		cname listnames_1_arg;
+		seq_num req_msg_1_arg;
 	} argument;
 	char *result;
 	xdrproc_t xdr_argument, xdr_result;
@@ -91,10 +95,34 @@ qchat_1(struct svc_req *rqstp, SVCXPRT *transp)
 		_rpcsvcdirty = 0;
 		return;
 
-	case PRINTMESSAGE:
-		xdr_argument = (xdrproc_t) xdr_wrapstring;
-		xdr_result = (xdrproc_t) xdr_void;
-		local = (char *(*)(char *, struct svc_req *)) printmessage_1_svc;
+	case JOIN:
+		xdr_argument = (xdrproc_t) xdr_cname;
+		xdr_result = (xdrproc_t) xdr_int;
+		local = (char *(*)(char *, struct svc_req *)) join_1_svc;
+		break;
+
+	case SEND:
+		xdr_argument = (xdrproc_t) xdr_msg_send;
+		xdr_result = (xdrproc_t) xdr_int;
+		local = (char *(*)(char *, struct svc_req *)) send_1_svc;
+		break;
+
+	case DELIVER:
+		xdr_argument = (xdrproc_t) xdr_msg_recv;
+		xdr_result = (xdrproc_t) xdr_int;
+		local = (char *(*)(char *, struct svc_req *)) deliver_1_svc;
+		break;
+
+	case LISTNAMES:
+		xdr_argument = (xdrproc_t) xdr_cname;
+		xdr_result = (xdrproc_t) xdr_int;
+		local = (char *(*)(char *, struct svc_req *)) listnames_1_svc;
+		break;
+
+	case REQ_MSG:
+		xdr_argument = (xdrproc_t) xdr_seq_num;
+		xdr_result = (xdrproc_t) xdr_msg_recv;
+		local = (char *(*)(char *, struct svc_req *)) req_msg_1_svc;
 		break;
 
 	default:

@@ -9,13 +9,57 @@
 /* Default timeout can be changed using clnt_control() */
 static struct timeval TIMEOUT = { 25, 0 };
 
-void *
-printmessage_1(char **argp, CLIENT *clnt)
+int *
+join_1(cname *argp, CLIENT *clnt)
 {
-	static char clnt_res;
+	static int clnt_res;
 
 	memset((char *)&clnt_res, 0, sizeof(clnt_res));
-	if (clnt_call(clnt, PRINTMESSAGE, xdr_wrapstring, argp, xdr_void, &clnt_res, TIMEOUT) != RPC_SUCCESS)
+	if (clnt_call(clnt, JOIN, xdr_cname, argp, xdr_int, &clnt_res, TIMEOUT) != RPC_SUCCESS)
 		return (NULL);
-	return ((void *)&clnt_res);
+	return (&clnt_res);
+}
+
+int *
+send_1(msg_send *argp, CLIENT *clnt)
+{
+	static int clnt_res;
+
+	memset((char *)&clnt_res, 0, sizeof(clnt_res));
+	if (clnt_call(clnt, SEND, xdr_msg_send, argp, xdr_int, &clnt_res, TIMEOUT) != RPC_SUCCESS)
+		return (NULL);
+	return (&clnt_res);
+}
+
+int *
+deliver_1(msg_recv *argp, CLIENT *clnt)
+{
+	static int clnt_res;
+
+	memset((char *)&clnt_res, 0, sizeof(clnt_res));
+	if (clnt_call(clnt, DELIVER, xdr_msg_recv, argp, xdr_int, &clnt_res, TIMEOUT) != RPC_SUCCESS)
+		return (NULL);
+	return (&clnt_res);
+}
+
+int *
+listnames_1(cname *argp, CLIENT *clnt)
+{
+	static int clnt_res;
+
+	memset((char *)&clnt_res, 0, sizeof(clnt_res));
+	if (clnt_call(clnt, LISTNAMES, xdr_cname, argp, xdr_int, &clnt_res, TIMEOUT) != RPC_SUCCESS)
+		return (NULL);
+	return (&clnt_res);
+}
+
+msg_recv *
+req_msg_1(seq_num *argp, CLIENT *clnt)
+{
+	static msg_recv clnt_res;
+
+	memset((char *)&clnt_res, 0, sizeof(clnt_res));
+	if (clnt_call(clnt, REQ_MSG, xdr_seq_num, argp, xdr_msg_recv, &clnt_res, TIMEOUT) != RPC_SUCCESS)
+		return (NULL);
+	return (&clnt_res);
 }
