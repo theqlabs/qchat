@@ -32,7 +32,7 @@ program QCHAT {
         int JOIN(cname) = 1;
         int SEND(msg_send) = 2;
         int DELIVER(msg_recv) = 3;
-        int LISTNAMES(cname) = 4;
+        int LISTNAMES(clientlist) = 4;
         msg_recv REQ_MSG(int) = 5;
     } = 1;
 } = 0x20000001;

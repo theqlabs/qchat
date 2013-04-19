@@ -104,8 +104,8 @@ extern "C" int * send_1_svc(msg_send *, struct svc_req *);
 extern "C" int * deliver_1(msg_recv *, CLIENT *);
 extern "C" int * deliver_1_svc(msg_recv *, struct svc_req *);
 #define LISTNAMES ((rpc_uint)4)
-extern "C" int * listnames_1(cname *, CLIENT *);
-extern "C" int * listnames_1_svc(cname *, struct svc_req *);
+extern "C" int * listnames_1(clientlist *, CLIENT *);
+extern "C" int * listnames_1_svc(clientlist *, struct svc_req *);
 #define REQ_MSG ((rpc_uint)5)
 extern "C" msg_recv * req_msg_1(int *, CLIENT *);
 extern "C" msg_recv * req_msg_1_svc(int *, struct svc_req *);
@@ -121,8 +121,8 @@ extern  int * send_1_svc(msg_send *, struct svc_req *);
 extern  int * deliver_1(msg_recv *, CLIENT *);
 extern  int * deliver_1_svc(msg_recv *, struct svc_req *);
 #define LISTNAMES ((rpc_uint)4)
-extern  int * listnames_1(cname *, CLIENT *);
-extern  int * listnames_1_svc(cname *, struct svc_req *);
+extern  int * listnames_1(clientlist *, CLIENT *);
+extern  int * listnames_1_svc(clientlist *, struct svc_req *);
 #define REQ_MSG ((rpc_uint)5)
 extern  msg_recv * req_msg_1(int *, CLIENT *);
 extern  msg_recv * req_msg_1_svc(int *, struct svc_req *);

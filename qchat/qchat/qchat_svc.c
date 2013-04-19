@@ -81,7 +81,7 @@ qchat_1(struct svc_req *rqstp, SVCXPRT *transp)
 		cname join_1_arg;
 		msg_send send_1_arg;
 		msg_recv deliver_1_arg;
-		cname listnames_1_arg;
+		clientlist listnames_1_arg;
 		int req_msg_1_arg;
 	} argument;
 	char *result;
@@ -114,7 +114,7 @@ qchat_1(struct svc_req *rqstp, SVCXPRT *transp)
 		break;
 
 	case LISTNAMES:
-		xdr_argument = (xdrproc_t) xdr_cname;
+		xdr_argument = (xdrproc_t) xdr_clientlist;
 		xdr_result = (xdrproc_t) xdr_int;
 		local = (char *(*)(char *, struct svc_req *)) listnames_1_svc;
 		break;

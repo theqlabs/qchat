@@ -43,12 +43,12 @@ deliver_1(msg_recv *argp, CLIENT *clnt)
 }
 
 int *
-listnames_1(cname *argp, CLIENT *clnt)
+listnames_1(clientlist *argp, CLIENT *clnt)
 {
 	static int clnt_res;
 
 	memset((char *)&clnt_res, 0, sizeof(clnt_res));
-	if (clnt_call(clnt, LISTNAMES, xdr_cname, argp, xdr_int, &clnt_res, TIMEOUT) != RPC_SUCCESS)
+	if (clnt_call(clnt, LISTNAMES, xdr_clientlist, argp, xdr_int, &clnt_res, TIMEOUT) != RPC_SUCCESS)
 		return (NULL);
 	return (&clnt_res);
 }
