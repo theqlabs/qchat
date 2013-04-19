@@ -8,15 +8,9 @@
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
-#include <rpc/pmap_clnt.h>
-#include <string.h>
 #include <netdb.h>
 #include <signal.h>
 #include <sys/ttycom.h>
-#ifdef __cplusplus
-#include <sysent.h>
-#endif /* __cplusplus */
 #include <memory.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -36,7 +30,8 @@ static int _rpcfdtype;		/* Whether Stream or Datagram ? */
 static int _rpcsvcdirty;	/* Still serving ? */
 
 static
-void _msgout(char* msg)
+void _msgout(msg)
+	char *msg;
 {
 #ifdef RPC_SVC_FG
 	if (_rpcpmstart)
@@ -47,8 +42,6 @@ void _msgout(char* msg)
 	syslog(LOG_ERR, msg);
 #endif
 }
-
-static void closedown(void);
 
 static void
 closedown()
@@ -72,10 +65,10 @@ closedown()
 	(void) alarm(_RPCSVC_CLOSEDOWN);
 }
 
-static void qchat_1(struct svc_req *rqstp, SVCXPRT *transp);
-
 static void
-qchat_1(struct svc_req *rqstp, SVCXPRT *transp)
+qchat_1(rqstp, transp)
+	struct svc_req *rqstp;
+	SVCXPRT *transp;
 {
 	union {
 		cname join_1_arg;
@@ -85,8 +78,8 @@ qchat_1(struct svc_req *rqstp, SVCXPRT *transp)
 		int req_msg_1_arg;
 	} argument;
 	char *result;
-	xdrproc_t xdr_argument, xdr_result;
-	char *(*local)(char *, struct svc_req *);
+	bool_t (*xdr_argument)(), (*xdr_result)();
+	char *(*local)();
 
 	_rpcsvcdirty = 1;
 	switch (rqstp->rq_proc) {
@@ -96,33 +89,33 @@ qchat_1(struct svc_req *rqstp, SVCXPRT *transp)
 		return;
 
 	case JOIN:
-		xdr_argument = (xdrproc_t) xdr_cname;
-		xdr_result = (xdrproc_t) xdr_int;
-		local = (char *(*)(char *, struct svc_req *)) join_1_svc;
+		xdr_argument = xdr_cname;
+		xdr_result = xdr_int;
+		local = (char *(*)()) join_1_svc;
 		break;
 
 	case SEND:
-		xdr_argument = (xdrproc_t) xdr_msg_send;
-		xdr_result = (xdrproc_t) xdr_int;
-		local = (char *(*)(char *, struct svc_req *)) send_1_svc;
+		xdr_argument = xdr_msg_send;
+		xdr_result = xdr_int;
+		local = (char *(*)()) send_1_svc;
 		break;
 
 	case DELIVER:
-		xdr_argument = (xdrproc_t) xdr_msg_recv;
-		xdr_result = (xdrproc_t) xdr_int;
-		local = (char *(*)(char *, struct svc_req *)) deliver_1_svc;
+		xdr_argument = xdr_msg_recv;
+		xdr_result = xdr_int;
+		local = (char *(*)()) deliver_1_svc;
 		break;
 
 	case LISTNAMES:
-		xdr_argument = (xdrproc_t) xdr_clientlist;
-		xdr_result = (xdrproc_t) xdr_int;
-		local = (char *(*)(char *, struct svc_req *)) listnames_1_svc;
+		xdr_argument = xdr_clientlist;
+		xdr_result = xdr_int;
+		local = (char *(*)()) listnames_1_svc;
 		break;
 
 	case REQ_MSG:
-		xdr_argument = (xdrproc_t) xdr_int;
-		xdr_result = (xdrproc_t) xdr_msg_recv;
-		local = (char *(*)(char *, struct svc_req *)) req_msg_1_svc;
+		xdr_argument = xdr_int;
+		xdr_result = xdr_msg_recv;
+		local = (char *(*)()) req_msg_1_svc;
 		break;
 
 	default:
@@ -136,7 +129,7 @@ qchat_1(struct svc_req *rqstp, SVCXPRT *transp)
 		_rpcsvcdirty = 0;
 		return;
 	}
-	result = (*local)((char *)&argument, rqstp);
+	result = (*local)(&argument, rqstp);
 	if (result != NULL && !svc_sendreply(transp, (xdrproc_t) xdr_result, result)) {
 		svcerr_systemerr(transp);
 	}
@@ -149,10 +142,11 @@ qchat_1(struct svc_req *rqstp, SVCXPRT *transp)
 }
 
 
-int main( int argc, char* argv[] );
 
 int
-main( int argc, char* argv[] )
+main(argc, argv)
+int argc;
+char *argv[];
 {
 	SVCXPRT *transp = NULL;
 	int sock;
@@ -237,7 +231,7 @@ main( int argc, char* argv[] )
 		exit(1);
 	}
 	if (_rpcpmstart) {
-		(void) signal(SIGALRM, (SIG_PF) closedown);
+		(void) signal(SIGALRM, (void(*)()) closedown);
 		(void) alarm(_RPCSVC_CLOSEDOWN);
 	}
 	svc_run();

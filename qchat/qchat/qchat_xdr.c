@@ -6,7 +6,9 @@
 #include "qchat.h"
 
 bool_t
-xdr_msg_send(XDR *xdrs, msg_send *objp)
+xdr_msg_send(xdrs, objp)
+	XDR *xdrs;
+	msg_send *objp;
 {
 
 	if (!xdr_string(xdrs, objp, MAX_MSG_LEN))
@@ -15,7 +17,9 @@ xdr_msg_send(XDR *xdrs, msg_send *objp)
 }
 
 bool_t
-xdr_uname(XDR *xdrs, uname *objp)
+xdr_uname(xdrs, objp)
+	XDR *xdrs;
+	uname *objp;
 {
 
 	if (!xdr_string(xdrs, objp, MAX_USR_LEN))
@@ -24,7 +28,9 @@ xdr_uname(XDR *xdrs, uname *objp)
 }
 
 bool_t
-xdr_ip_port(XDR *xdrs, ip_port *objp)
+xdr_ip_port(xdrs, objp)
+	XDR *xdrs;
+	ip_port *objp;
 {
 
 	if (!xdr_string(xdrs, objp, MAX_IP_LEN))
@@ -33,7 +39,9 @@ xdr_ip_port(XDR *xdrs, ip_port *objp)
 }
 
 bool_t
-xdr_clientlist(XDR *xdrs, clientlist *objp)
+xdr_clientlist(xdrs, objp)
+	XDR *xdrs;
+	clientlist *objp;
 {
 
 	if (!xdr_array(xdrs, (char **)&objp->clientlist_val, (u_int *)&objp->clientlist_len, ~0, sizeof(cname), (xdrproc_t)xdr_cname))
@@ -42,12 +50,14 @@ xdr_clientlist(XDR *xdrs, clientlist *objp)
 }
 
 bool_t
-xdr_cname(XDR *xdrs, cname *objp)
+xdr_cname(xdrs, objp)
+	XDR *xdrs;
+	cname *objp;
 {
 
 	if (!xdr_uname(xdrs, &objp->userName))
 		return (FALSE);
-	if (!xdr_array(xdrs, (char **)&objp->hostname.hostname_val, (u_int *)&objp->hostname.hostname_len, ~0, sizeof(ip_port), (xdrproc_t)xdr_ip_port))
+	if (!xdr_ip_port(xdrs, &objp->hostname))
 		return (FALSE);
 	if (!xdr_int(xdrs, &objp->leader_flag))
 		return (FALSE);
@@ -55,7 +65,9 @@ xdr_cname(XDR *xdrs, cname *objp)
 }
 
 bool_t
-xdr_msg_recv(XDR *xdrs, msg_recv *objp)
+xdr_msg_recv(xdrs, objp)
+	XDR *xdrs;
+	msg_recv *objp;
 {
 
 	if (!xdr_msg_send(xdrs, &objp->msg_sent))

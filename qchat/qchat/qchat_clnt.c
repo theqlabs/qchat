@@ -3,14 +3,15 @@
  * It was generated using rpcgen.
  */
 
-#include <memory.h>
 #include "qchat.h"
 
 /* Default timeout can be changed using clnt_control() */
 static struct timeval TIMEOUT = { 25, 0 };
 
 int *
-join_1(cname *argp, CLIENT *clnt)
+join_1(argp, clnt)
+	cname *argp;
+	CLIENT *clnt;
 {
 	static int clnt_res;
 
@@ -21,7 +22,9 @@ join_1(cname *argp, CLIENT *clnt)
 }
 
 int *
-send_1(msg_send *argp, CLIENT *clnt)
+send_1(argp, clnt)
+	msg_send *argp;
+	CLIENT *clnt;
 {
 	static int clnt_res;
 
@@ -32,7 +35,9 @@ send_1(msg_send *argp, CLIENT *clnt)
 }
 
 int *
-deliver_1(msg_recv *argp, CLIENT *clnt)
+deliver_1(argp, clnt)
+	msg_recv *argp;
+	CLIENT *clnt;
 {
 	static int clnt_res;
 
@@ -43,7 +48,9 @@ deliver_1(msg_recv *argp, CLIENT *clnt)
 }
 
 int *
-listnames_1(clientlist *argp, CLIENT *clnt)
+listnames_1(argp, clnt)
+	clientlist *argp;
+	CLIENT *clnt;
 {
 	static int clnt_res;
 
@@ -54,7 +61,9 @@ listnames_1(clientlist *argp, CLIENT *clnt)
 }
 
 msg_recv *
-req_msg_1(int *argp, CLIENT *clnt)
+req_msg_1(argp, clnt)
+	int *argp;
+	CLIENT *clnt;
 {
 	static msg_recv clnt_res;
 

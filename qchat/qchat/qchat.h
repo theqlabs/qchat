@@ -59,10 +59,7 @@ bool_t xdr_clientlist();
 
 struct cname {
 	uname userName;
-	struct {
-		u_int hostname_len;
-		ip_port *hostname_val;
-	} hostname;
+	ip_port hostname;
 	int leader_flag;
 };
 typedef struct cname cname;
