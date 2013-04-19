@@ -44,6 +44,19 @@ bool_t xdr_ip_port();
 #endif /* Old Style C */
 
 
+typedef struct {
+	u_int clientlist_len;
+	cname *clientlist_val;
+} clientlist;
+#ifdef __cplusplus
+extern "C" bool_t xdr_clientlist(XDR *, clientlist*);
+#elif __STDC__
+extern  bool_t xdr_clientlist(XDR *, clientlist*);
+#else /* Old Style C */
+bool_t xdr_clientlist();
+#endif /* Old Style C */
+
+
 struct cname {
 	uname userName;
 	struct {

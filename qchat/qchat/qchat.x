@@ -13,6 +13,7 @@ const MAX_IP_LEN =  32;		/* 4 Bytes  */
 typedef string msg_send<MAX_MSG_LEN>;
 typedef string uname<MAX_USR_LEN>;
 typedef string ip_port<MAX_IP_LEN>;
+typedef cname clientlist<>; 
 
 struct cname {
     uname userName;

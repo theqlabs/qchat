@@ -33,6 +33,15 @@ xdr_ip_port(XDR *xdrs, ip_port *objp)
 }
 
 bool_t
+xdr_clientlist(XDR *xdrs, clientlist *objp)
+{
+
+	if (!xdr_array(xdrs, (char **)&objp->clientlist_val, (u_int *)&objp->clientlist_len, ~0, sizeof(cname), (xdrproc_t)xdr_cname))
+		return (FALSE);
+	return (TRUE);
+}
+
+bool_t
 xdr_cname(XDR *xdrs, cname *objp)
 {
 
