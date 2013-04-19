@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS= -g -Wall -pedantic -O0 -std=gnu99
+CFLAGS= -g -Wall -pedantic -O0 -std=gnu99 -m32
 LDFLAGS=
 SOURCES=qchat.c qchat_clnt.c qchat_svc.c qchat_xdr.c qchat.h
 OBJECTS=$(SOURCES:.c=.o)

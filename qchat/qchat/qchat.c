@@ -31,6 +31,7 @@ int main(int argc, char * argv[]) {
   const int LOCALPORT = 10001;
   const int PORTSTRLEN = 6;
   int isSequencer = 0;
+  int seqInitialized = FALSE;
   struct clientlist* clientList;
 
   if (localHostname == NULL) {
@@ -109,30 +110,32 @@ int main(int argc, char * argv[]) {
     //Joining an existing chat
     remoteHostname = argv[2];
     printf("%s joined an existing chat on %s, listening on %s\n", usrName, remoteHostname, localHostname);
-    me->leader_flag = isSequencer;
+    // create a CLIENT handle
+    clnt = clnt_create(localHostname, QCHAT, QCHATVERS, (char*)"udp");
 
+    // if connection doesn't succeed
+    if (clnt == NULL) {
+      clnt_pcreateerror(localHostname);
+      printf("Sorry, no chat is active on " << localHostname << ", try again later. " << endl;
+      return 1;
+    }
 
   } else {
     //Creating a new chat
     printf("%s started a new chat, listening on %s\n", usrName, localHostname);
     isSequencer = 1;
-    me->leader_flag = isSequencer;
-
 
   }
 
+  me->leader_flag = isSequencer;
+
+  if(isSequencer == 1) {
+
+  }
 
   //string myMessage = "";
 
-  // // create a CLIENT handle
-  // clnt = clnt_create(localHostname, QCHAT, QCHATVERS, (char*)"udp");
 
-  // // if connection doesn't succeed
-  // if (clnt == NULL) {
-  //     clnt_pcreateerror(localHostname);
-  //   printf("Sorry, no chat is active on " << localHostname << ", try again later. " << endl;
-  //     return 1;
-  // }
 
 
 
@@ -147,6 +150,18 @@ int main(int argc, char * argv[]) {
     free(localHostname);
   }
   return 0;
+
+}
+
+int * join_1_svc (cname * client, struct svc_req* req) {
+
+}
+
+int * send_1_svc(msg_send * msg, struct svc_req* req) {
+
+}
+
+int * deliver_1_svc(msg_recv * msg, struct svc_req* req) {
 
 }
 

@@ -39,17 +39,6 @@ xdr_ip_port(xdrs, objp)
 }
 
 bool_t
-xdr_clientlist(xdrs, objp)
-	XDR *xdrs;
-	clientlist *objp;
-{
-
-	if (!xdr_array(xdrs, (char **)&objp->clientlist_val, (u_int *)&objp->clientlist_len, ~0, sizeof(cname), (xdrproc_t)xdr_cname))
-		return (FALSE);
-	return (TRUE);
-}
-
-bool_t
 xdr_cname(xdrs, objp)
 	XDR *xdrs;
 	cname *objp;
@@ -60,6 +49,17 @@ xdr_cname(xdrs, objp)
 	if (!xdr_ip_port(xdrs, &objp->hostname))
 		return (FALSE);
 	if (!xdr_int(xdrs, &objp->leader_flag))
+		return (FALSE);
+	return (TRUE);
+}
+
+bool_t
+xdr_clientlist(xdrs, objp)
+	XDR *xdrs;
+	clientlist *objp;
+{
+
+	if (!xdr_array(xdrs, (char **)&objp->clientlist_val, (u_int *)&objp->clientlist_len, ~0, sizeof(cname), (xdrproc_t)xdr_cname))
 		return (FALSE);
 	return (TRUE);
 }
