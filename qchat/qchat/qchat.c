@@ -1,5 +1,5 @@
 //
-//  qchat_client.cpp
+//  qchat.c
 //  qchat - a distributed chat program with the following features
 //      - Fully-ordered Multicast UDP Protocol
 //      - Sequencer-Client Model implementing an election protocol for failure recovery
@@ -29,9 +29,11 @@ int main(int argc, char * argv[]) {
   char * printmessage_1_arg;
   char *localHostname = (char*) malloc((size_t)INET_ADDRSTRLEN);
   const int localPort = 10001;
+  int isSequencer = 0;
+  struct cname* clientList;
 
   if (localHostname == NULL) {
-    printf("Chat localHostname memory allocation failed\n");
+    printf("Chat localHostname memory allocation failed. Exiting...\n");
     return 1;
   }
 
@@ -40,49 +42,73 @@ int main(int argc, char * argv[]) {
     return 1;
   }
 
-    // Creating a new chat
-    int sock = socket(AF_INET, SOCK_DGRAM, 0);
-    if (sock == -1) {
-      printf("Error discovering local IP address\n");
-      return 1;
+  //Local IP address discovery protocol
+  int sock = socket(AF_INET, SOCK_DGRAM, 0);
+  if (sock == -1) {
+    printf("Error discovering local IP address. Exiting...\n");
+    return 1;
+  }
+
+  const char* openDnsAddr = "208.67.222.222";
+  uint16_t dnsPort = 53;
+  struct sockaddr_in* socketadd;
+  socketadd = (struct sockaddr_in*) malloc(sizeof(struct sockaddr_in));
+  socketadd->sin_family = AF_INET;
+  socketadd->sin_addr.s_addr = inet_addr(openDnsAddr);
+  socketadd->sin_port = htons(dnsPort);
+
+  int err = connect(sock, (const struct sockaddr*) socketadd, sizeof(*socketadd));
+  if (socketadd != NULL) {
+    free(socketadd);
+  }
+  if (sock == -1) {
+    printf("Error discovering local IP address. Exiting...\n");
+    return 1;
+  }
+  struct sockaddr_in sockname;
+  socklen_t socknamelen = sizeof(sockname);
+  err = getsockname(sock, (struct sockaddr*) &sockname, &socknamelen);
+  if (sock == -1) {
+    printf("Error discovering local IP address. Exiting...\n");
+    return 1;
+  }
+
+  const char* p = inet_ntop(AF_INET, &sockname.sin_addr, localHostname, INET_ADDRSTRLEN);
+  if (p == NULL) {
+    printf("Error discovering local IP address. Exiting...\n");
+    return 1;
     }
 
-    const char* openDnsAddr = "208.67.222.222";
-    uint16_t dnsPort = 53;
-    struct sockaddr_in* socketadd;
-    socketadd = (struct sockaddr_in*) malloc(sizeof(struct sockaddr_in));
-    socketadd->sin_family = AF_INET;
-    socketadd->sin_addr.s_addr = inet_addr(openDnsAddr);
-    socketadd->sin_port = htons(dnsPort);
-
-    int err = connect(sock, (const struct sockaddr*) socketadd, sizeof(*socketadd));
-    if (sock == -1) {
-      printf("Error discovering local IP address\n");
-      return 1;
-    }
-    struct sockaddr_in sockname;
-    socklen_t socknamelen = sizeof(sockname);
-    err = getsockname(sock, (struct sockaddr*) &sockname, &socknamelen);
-    if (sock == -1) {
-      printf("Error discovering local IP address\n");
-      return 1;
-    }
-
-    const char* p = inet_ntop(AF_INET, &sockname.sin_addr, localHostname, INET_ADDRSTRLEN);
-    if (p == NULL) {
-      printf("Error discovering local IP address\n");
-      return 1;
-    }
-
-  char* usrName = argv[1];
-
+  //Proceed with chat joining or creation
+  if (len(argv[1]) > MAX_USR_LEN-1) {
+    //Truncate your foolishly long username
+    argv[1][MAX_USR_LEN-1] = '\0';
+  }
+  uname usrName = (uname) argv[1];
   char* remoteHostname;
+
+  cname* me = (cname *) malloc(sizeof(cname));
+  if (me == NULL) {
+    printf("Error on client name memory allocation. Exiting...\n");
+    return 1;
+  }
+  strncpy(me->userName, usrName, MAX_USR_LEN);
+  strncpy(me->hostname, usrName, MAX_IP_LEN);
+
   if (argc == 3) {
-    // Joining an existing chat
+    //Joining an existing chat
     remoteHostname = argv[2];
     printf("%s joined an existing chat on %s, listening on %s\n", usrName, remoteHostname, localHostname);
+    me->leader_flag = isSequencer;
+
+
   } else {
+    //Creating a new chat
     printf("%s started a new chat, listening on %s\n", usrName, localHostname);
+    isSequencer = 1;
+    me->leader_flag = isSequencer;
+
+
   }
 
 
