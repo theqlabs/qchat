@@ -11,6 +11,7 @@
 //
 
 #include <stdio.h>
+#include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <rpc/rpc.h>
@@ -18,8 +19,7 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 
-//include
-//"qchat.h"
+#include "qchat.h"
 
 
 int main(int argc, char * argv[]) {
@@ -28,9 +28,10 @@ int main(int argc, char * argv[]) {
   void *result_1;
   char * printmessage_1_arg;
   char *localHostname = (char*) malloc((size_t)INET_ADDRSTRLEN);
-  const int localPort = 10001;
+  const int LOCALPORT = 10001;
+  const int PORTSTRLEN = 6;
   int isSequencer = 0;
-  struct cname* clientList;
+  struct clientlist* clientList;
 
   if (localHostname == NULL) {
     printf("Chat localHostname memory allocation failed. Exiting...\n");
@@ -80,7 +81,7 @@ int main(int argc, char * argv[]) {
     }
 
   //Proceed with chat joining or creation
-  if (len(argv[1]) > MAX_USR_LEN-1) {
+  if (strlen(argv[1]) > MAX_USR_LEN-1) {
     //Truncate your foolishly long username
     argv[1][MAX_USR_LEN-1] = '\0';
   }
@@ -88,12 +89,21 @@ int main(int argc, char * argv[]) {
   char* remoteHostname;
 
   cname* me = (cname *) malloc(sizeof(cname));
+  //clientList =
   if (me == NULL) {
     printf("Error on client name memory allocation. Exiting...\n");
     return 1;
   }
   strncpy(me->userName, usrName, MAX_USR_LEN);
-  strncpy(me->hostname, usrName, MAX_IP_LEN);
+
+  char portString[PORTSTRLEN];
+  sprintf(portString, "%d", LOCALPORT);
+  char localIpPortStr[MAX_IP_LEN];
+  strncpy(localIpPortStr, localHostname, strlen(localHostname)+1);
+  localIpPortStr[strlen(localHostname)] = ':';
+  localIpPortStr[strlen(localHostname)+1] = '\0';
+  strncat(localIpPortStr, portString, strlen(portString));
+  memcpy((void*)&(*me).hostname, localIpPortStr, (size_t)MAX_IP_LEN);
 
   if (argc == 3) {
     //Joining an existing chat
