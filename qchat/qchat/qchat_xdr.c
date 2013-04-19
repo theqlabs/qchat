@@ -27,11 +27,11 @@ bool_t
 xdr_cname(XDR *xdrs, cname *objp)
 {
 
-	if (!xdr_string(xdrs, &objp->uname, MAX_USR_LEN))
+	if (!xdr_uname(xdrs, &objp->userNames))
 		return (FALSE);
 	if (!xdr_string(xdrs, &objp->ip_port, ~0))
 		return (FALSE);
-	if (!xdr_array(xdrs, (char **)&objp->leader_flag.leader_flag_val, (u_int *)&objp->leader_flag.leader_flag_len, ~0, sizeof(bool_t), (xdrproc_t)xdr_bool))
+	if (!xdr_bool(xdrs, &objp->leader_flag))
 		return (FALSE);
 	return (TRUE);
 }
@@ -40,9 +40,9 @@ bool_t
 xdr_msg_recv(XDR *xdrs, msg_recv *objp)
 {
 
-	if (!xdr_array(xdrs, (char **)&objp->msg_sent.msg_sent_val, (u_int *)&objp->msg_sent.msg_sent_len, ~0, sizeof(msg_send), (xdrproc_t)xdr_msg_send))
+	if (!xdr_msg_send(xdrs, &objp->msg_sent))
 		return (FALSE);
-	if (!xdr_array(xdrs, (char **)&objp->user_sent.user_sent_val, (u_int *)&objp->user_sent.user_sent_len, ~0, sizeof(uname), (xdrproc_t)xdr_uname))
+	if (!xdr_uname(xdrs, &objp->user_sent))
 		return (FALSE);
 	if (!xdr_int(xdrs, &objp->seq_num))
 		return (FALSE);

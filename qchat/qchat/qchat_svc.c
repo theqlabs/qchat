@@ -82,7 +82,7 @@ qchat_1(struct svc_req *rqstp, SVCXPRT *transp)
 		msg_send send_1_arg;
 		msg_recv deliver_1_arg;
 		cname listnames_1_arg;
-		seq_num req_msg_1_arg;
+		int req_msg_1_arg;
 	} argument;
 	char *result;
 	xdrproc_t xdr_argument, xdr_result;
@@ -120,7 +120,7 @@ qchat_1(struct svc_req *rqstp, SVCXPRT *transp)
 		break;
 
 	case REQ_MSG:
-		xdr_argument = (xdrproc_t) xdr_seq_num;
+		xdr_argument = (xdrproc_t) xdr_int;
 		xdr_result = (xdrproc_t) xdr_msg_recv;
 		local = (char *(*)(char *, struct svc_req *)) req_msg_1_svc;
 		break;

@@ -34,12 +34,9 @@ bool_t xdr_uname();
 
 
 struct cname {
-	char *uname;
+	uname userNames;
 	char *ip_port;
-	struct {
-		u_int leader_flag_len;
-		bool_t *leader_flag_val;
-	} leader_flag;
+	bool_t leader_flag;
 };
 typedef struct cname cname;
 #ifdef __cplusplus
@@ -52,14 +49,8 @@ bool_t xdr_cname();
 
 
 struct msg_recv {
-	struct {
-		u_int msg_sent_len;
-		msg_send *msg_sent_val;
-	} msg_sent;
-	struct {
-		u_int user_sent_len;
-		uname *user_sent_val;
-	} user_sent;
+	msg_send msg_sent;
+	uname user_sent;
 	int seq_num;
 };
 typedef struct msg_recv msg_recv;
@@ -89,8 +80,8 @@ extern "C" int * deliver_1_svc(msg_recv *, struct svc_req *);
 extern "C" int * listnames_1(cname *, CLIENT *);
 extern "C" int * listnames_1_svc(cname *, struct svc_req *);
 #define REQ_MSG ((rpc_uint)5)
-extern "C" msg_recv * req_msg_1(seq_num *, CLIENT *);
-extern "C" msg_recv * req_msg_1_svc(seq_num *, struct svc_req *);
+extern "C" msg_recv * req_msg_1(int *, CLIENT *);
+extern "C" msg_recv * req_msg_1_svc(int *, struct svc_req *);
 
 #elif __STDC__
 #define JOIN ((rpc_uint)1)
@@ -106,8 +97,8 @@ extern  int * deliver_1_svc(msg_recv *, struct svc_req *);
 extern  int * listnames_1(cname *, CLIENT *);
 extern  int * listnames_1_svc(cname *, struct svc_req *);
 #define REQ_MSG ((rpc_uint)5)
-extern  msg_recv * req_msg_1(seq_num *, CLIENT *);
-extern  msg_recv * req_msg_1_svc(seq_num *, struct svc_req *);
+extern  msg_recv * req_msg_1(int *, CLIENT *);
+extern  msg_recv * req_msg_1_svc(int *, struct svc_req *);
 
 #else /* Old Style C */
 #define JOIN ((rpc_uint)1)

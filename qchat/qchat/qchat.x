@@ -13,14 +13,14 @@ typedef string msg_send<MAX_MSG_LEN>;
 typedef string uname<MAX_USR_LEN>;
 
 struct cname {
-    string uname<MAX_USR_LEN>;
+    uname userNames;
     string ip_port<>;
-    bool leader_flag<>;
+    bool leader_flag;
 };
 
 struct msg_recv {
-    msg_send msg_sent<>;
-    uname user_sent<>;
+    msg_send msg_sent;
+    uname user_sent;
     int seq_num;
 };
 
@@ -30,6 +30,6 @@ program QCHAT {
         int SEND(msg_send) = 2;
         int DELIVER(msg_recv) = 3;
         int LISTNAMES(cname) = 4;
-        msg_recv REQ_MSG(seq_num) = 5;
+        msg_recv REQ_MSG(int) = 5;
     } = 1;
 } = 0x20000001;
