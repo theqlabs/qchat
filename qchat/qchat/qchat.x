@@ -7,15 +7,17 @@
 */ 
 
 const MAX_MSG_LEN = 512;        /* 64 Bytes */
-const MAX_USR_LEN = 32;         /* 4 Bytes */
+const MAX_USR_LEN = 32;         /* 4 Bytes  */
+const MAX_IP_LEN =  32;		/* 4 Bytes  */
 
 typedef string msg_send<MAX_MSG_LEN>;
 typedef string uname<MAX_USR_LEN>;
+typedef string ip_port<MAX_IP_LEN>;
 
 struct cname {
-    uname userNames;
-    string ip_port<>;
-    bool leader_flag;
+    uname userName;
+    ip_port hostname<>;
+    int leader_flag;
 };
 
 struct msg_recv {

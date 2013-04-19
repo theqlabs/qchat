@@ -12,6 +12,7 @@
 
 #define MAX_MSG_LEN 512
 #define MAX_USR_LEN 32
+#define MAX_IP_LEN 32
 
 typedef char *msg_send;
 #ifdef __cplusplus
@@ -33,10 +34,23 @@ bool_t xdr_uname();
 #endif /* Old Style C */
 
 
+typedef char *ip_port;
+#ifdef __cplusplus
+extern "C" bool_t xdr_ip_port(XDR *, ip_port*);
+#elif __STDC__
+extern  bool_t xdr_ip_port(XDR *, ip_port*);
+#else /* Old Style C */
+bool_t xdr_ip_port();
+#endif /* Old Style C */
+
+
 struct cname {
-	uname userNames;
-	char *ip_port;
-	bool_t leader_flag;
+	uname userName;
+	struct {
+		u_int hostname_len;
+		ip_port *hostname_val;
+	} hostname;
+	int leader_flag;
 };
 typedef struct cname cname;
 #ifdef __cplusplus

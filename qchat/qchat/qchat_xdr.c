@@ -24,14 +24,23 @@ xdr_uname(XDR *xdrs, uname *objp)
 }
 
 bool_t
+xdr_ip_port(XDR *xdrs, ip_port *objp)
+{
+
+	if (!xdr_string(xdrs, objp, MAX_IP_LEN))
+		return (FALSE);
+	return (TRUE);
+}
+
+bool_t
 xdr_cname(XDR *xdrs, cname *objp)
 {
 
-	if (!xdr_uname(xdrs, &objp->userNames))
+	if (!xdr_uname(xdrs, &objp->userName))
 		return (FALSE);
-	if (!xdr_string(xdrs, &objp->ip_port, ~0))
+	if (!xdr_array(xdrs, (char **)&objp->hostname.hostname_val, (u_int *)&objp->hostname.hostname_len, ~0, sizeof(ip_port), (xdrproc_t)xdr_ip_port))
 		return (FALSE);
-	if (!xdr_bool(xdrs, &objp->leader_flag))
+	if (!xdr_int(xdrs, &objp->leader_flag))
 		return (FALSE);
 	return (TRUE);
 }
