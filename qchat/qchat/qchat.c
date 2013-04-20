@@ -19,11 +19,17 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <pthread.h>
+#include <sys/types.h>
+#include <sys/socket.h>
 
 #include "qchat.h"
 
 void print_client_list(clientlist *);
 void getLocalIp(char*);
+
+const int LOCALPORT = 10001;
+const int PORTSTRLEN = 6;
+clientlist* clist;
 
 void* messageHandler(void* inputclist) {
   printf("Thread created successfully\n");
@@ -33,21 +39,31 @@ void* messageHandler(void* inputclist) {
     return (void*)1;
   }
 
-
   printf("Succeeded, current users:\n");
   //print_client_list(clist);
-  return (void * )1;
+  int sockid;
+  if((sockid = socket(PF_INET, SOCK_DGRAM, 0)) <0) {
+    perror("Error creating listening UDP socket");
+    return (void *)1;
+  }
+
+  struct sockaddr_in* socketadd = (struct sockaddr_in*) malloc(sizeof(struct sockaddr_in));
+  socketadd->sin_family = AF_INET;
+  socketadd->sin_port = htons(LOCALPORT);
+
+  if((bind(sockid, (struct sockaddr*)socketadd, sizeof(*socketadd)))<0) {
+    close(sockid);
+    perror("Error binding to listening UDP socket");
+    return (void *)1;
+  }
+  printf("Server socket ok\n");
+  close(sockid);
+  return (void *)1;
 
 }
 
-const int LOCALPORT = 10001;
-const int PORTSTRLEN = 6;
-int isSequencer = 0;
-clientlist* clist;
-
-
 int main(int argc, char * argv[]) {
-
+  int isSequencer = 0;
   CLIENT *clnt;
   char *localHostname = (char*) malloc((size_t)INET_ADDRSTRLEN);
 
@@ -82,7 +98,7 @@ int main(int argc, char * argv[]) {
     return 1;
   }
 
-  memcpy(&(me->userName), usrName, MAX_USR_LEN);
+  memcpy(&(me->userName), usrName, strlen(usrName));
 
   char portString[PORTSTRLEN];
   sprintf(portString, "%d", LOCALPORT);
@@ -97,7 +113,7 @@ int main(int argc, char * argv[]) {
   if (argc == 3) {
     //Joining an existing chat
     remoteHostname = argv[2];
-    printf("%s joining an existing chat on %s, listening on %s\n", usrName, remoteHostname, localHostname);
+    printf("%s joining an existing chat on %s, listening on %s:%d\n", usrName, remoteHostname, localHostname, LOCALPORT);
     // create a CLIENT handle
     clnt = clnt_create(remoteHostname, QCHAT, QCHATVERS, "udp");
 
@@ -110,7 +126,7 @@ int main(int argc, char * argv[]) {
 
   } else {
     //Creating a new chat
-    printf("%s started a new chat, listening on %s\n", usrName, localHostname);
+    printf("%s started a new chat, listening on %s:%d\n", usrName, localHostname, LOCALPORT);
     isSequencer = 1;
     clnt = clnt_create(localHostname, QCHAT, QCHATVERS, "udp");
     if (clnt == NULL) {
@@ -122,7 +138,7 @@ int main(int argc, char * argv[]) {
 
   me->leader_flag = isSequencer;
   clientlist *clist;
-  //clientlist *clist = join_1(me, clnt);
+  //clientlist *clist = join_1(&me, clnt);
 
   pthread_t handlerThread;
   pthread_attr_t attr;
