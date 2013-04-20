@@ -5,10 +5,10 @@
 
 #include "qchat.h"
 
-clientlist *
-join_1(argp, rqstp)
-	cname *argp;
-	struct svc_req *rqstp; {
+//clientlist *join_1(argp, rqstp)
+clientlist *join_1(cname *argp, struct svc_req *rqstp) {	
+	//cname *argp;
+	//struct svc_req *rqstp; {
 
 	static clientlist result;
 
@@ -39,6 +39,8 @@ send_1(argp, rqstp)
 	// 		remove client from clist
 	//		multicast exist msg, seq# 
 
+
+
 	return(&result);
 }
 
@@ -57,6 +59,8 @@ exit_1(argp, rqstp)
 	// 		pickNewLeader
 	//		multicast new leader
 	// multicast exist msg, seq#
+
+
 
 	return(&result);
 }
