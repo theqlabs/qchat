@@ -109,14 +109,14 @@ int main(int argc, char * argv[]) {
   if (argc == 3) {
     //Joining an existing chat
     remoteHostname = argv[2];
-    printf("%s joined an existing chat on %s, listening on %s\n", usrName, remoteHostname, localHostname);
+    printf("%s joining an existing chat on %s, listening on %s\n", usrName, remoteHostname, localHostname);
     // create a CLIENT handle
     clnt = clnt_create(localHostname, QCHAT, QCHATVERS, (char*)"udp");
 
     // if connection doesn't succeed
     if (clnt == NULL) {
       clnt_pcreateerror(localHostname);
-      printf("Sorry, no chat is active on " << localHostname << ", try again later. " << endl;
+      printf("Sorry, no chat is active on %s, try again later. ", localHostname);
       return 1;
     }
 
@@ -132,6 +132,8 @@ int main(int argc, char * argv[]) {
   if(isSequencer == 1) {
 
   }
+
+  //while (true)
 
   //string myMessage = "";
 
@@ -154,15 +156,15 @@ int main(int argc, char * argv[]) {
 }
 
 int * join_1_svc (cname * client, struct svc_req* req) {
-
+  return NULL;
 }
 
 int * send_1_svc(msg_send * msg, struct svc_req* req) {
-
+  return NULL;
 }
 
 int * deliver_1_svc(msg_recv * msg, struct svc_req* req) {
-
+  return NULL;
 }
 
 
