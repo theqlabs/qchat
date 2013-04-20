@@ -121,13 +121,14 @@ int main(int argc, char * argv[]) {
   }
 
   me->leader_flag = isSequencer;
-  clientlist *clist = join_1(me, clnt);
+  clientlist *clist;
+  //clientlist *clist = join_1(me, clnt);
 
   pthread_t handlerThread;
   pthread_attr_t attr;
   pthread_attr_init(&attr);
   pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
-  pthread_create(&handlerThread, &attr, messageHandler, (void*)me);
+  pthread_create(&handlerThread, &attr, messageHandler, (void*)clist);
   //
   char inputmsg[MAX_MSG_LEN];
   while (inputmsg[0]!= EOF) {
