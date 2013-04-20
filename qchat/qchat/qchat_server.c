@@ -12,6 +12,13 @@ join_1_svc(argp, rqstp)
 
 	static clientlist result;
 
+	// clientlist is an array of cname structs
+	// struct cname {
+	// 		uname userName;
+	//		ip_port hostname;
+	//		int leader_flag;
+	// };
+
 	// takes in struct CNAME from client
 	// returns clientlist when done
 
@@ -19,7 +26,7 @@ join_1_svc(argp, rqstp)
 	// return current clientlist
 	// multicast new member msg, seq#
 
-
+	
 
 	return(&result);
 }
