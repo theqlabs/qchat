@@ -24,17 +24,18 @@
 
 void print_client_list(clientlist *);
 
-int messageHandler(cname* me) {
-  if(me == NULL) {
+void* messageHandler(void* inputcname) {
+  //cname me = (cname) inputcname;
+  if(inputcname == NULL) {
     printf("Socket listener received an empty client object. Exiting...\n");
-    return 1;
+    return (void*)1;
   }
 
   //clientlist *clist = join_1(me);
-  clientlist *clist = NULL;
+  //clientlist *clist = NULL;
   printf("Succeeded, current users:\n");
   //print_client_list(clist);
-  return 1;
+  return (void * )1;
 
 }
 
@@ -156,7 +157,7 @@ int main(int argc, char * argv[]) {
   pthread_attr_t attr;
   pthread_attr_init(&attr);
   pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
-  pthread_create(&handlerThread, &attr, messageHandler, me);
+  pthread_create(&handlerThread, &attr, messageHandler, (void*)me);
   pthread_attr_destroy(&attr);
   char inputmsg[MAX_MSG_LEN];
   while (inputmsg[0]!= EOF) {
