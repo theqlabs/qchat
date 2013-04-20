@@ -25,6 +25,7 @@
 void print_client_list(clientlist *);
 
 void* messageHandler(void* inputcname) {
+  printf("Thread created successfully\n");
   //cname me = (cname) inputcname;
   if(inputcname == NULL) {
     printf("Socket listener received an empty client object. Exiting...\n");
@@ -113,7 +114,8 @@ int main(int argc, char * argv[]) {
     printf("Error on client name memory allocation. Exiting...\n");
     return 1;
   }
-  strncpy(me->userName, usrName, MAX_USR_LEN);
+
+  memcpy(&(me->userName), usrName, MAX_USR_LEN);
 
   char portString[PORTSTRLEN];
   sprintf(portString, "%d", LOCALPORT);
@@ -126,6 +128,7 @@ int main(int argc, char * argv[]) {
 
   //TEST
   printf(localIpPortStr);
+  printf("\n");
 
   //Create the RPC client objects
   if (argc == 3) {
@@ -133,7 +136,7 @@ int main(int argc, char * argv[]) {
     remoteHostname = argv[2];
     printf("%s joining an existing chat on %s, listening on %s\n", usrName, remoteHostname, localHostname);
     // create a CLIENT handle
-    clnt = clnt_create(remoteHostname, QCHAT, QCHATVERS, (char*)"udp");
+    clnt = clnt_create(remoteHostname, QCHAT, QCHATVERS, "udp");
 
     // if connection doesn't succeed
     if (clnt == NULL) {
@@ -146,11 +149,13 @@ int main(int argc, char * argv[]) {
     //Creating a new chat
     printf("%s started a new chat, listening on %s\n", usrName, localHostname);
     isSequencer = 1;
-    clnt = clnt_create(localHostname, QCHAT, QCHATVERS, (char*)"udp");
+    clnt = clnt_create(localHostname, QCHAT, QCHATVERS, "udp");
+    printf(localHostname);
+  printf("\n");
     if (clnt == NULL) {
       clnt_pcreateerror(localHostname);
       printf("Unable to activate a new chat on %s, try again later. ", localHostname);
-      return 1;
+      //return 1;
     }
   }
 
@@ -159,9 +164,9 @@ int main(int argc, char * argv[]) {
   pthread_t handlerThread;
   pthread_attr_t attr;
   pthread_attr_init(&attr);
-  pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
+  pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
   pthread_create(&handlerThread, &attr, messageHandler, (void*)me);
-  pthread_attr_destroy(&attr);
+  //
   char inputmsg[MAX_MSG_LEN];
   while (inputmsg[0]!= EOF) {
     if (fgets(inputmsg, sizeof inputmsg, stdin)) {
@@ -172,6 +177,7 @@ int main(int argc, char * argv[]) {
     }
   }
 
+  pthread_attr_destroy(&attr);
 
   if(me!= NULL) {
     free(me);
