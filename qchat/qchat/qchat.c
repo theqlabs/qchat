@@ -124,6 +124,9 @@ int main(int argc, char * argv[]) {
   strncat(localIpPortStr, portString, strlen(portString));
   memcpy((void*)&(*me).hostname, localIpPortStr, (size_t)MAX_IP_LEN);
 
+  //TEST
+  printf(localIpPortStr);
+
   //Create the RPC client objects
   if (argc == 3) {
     //Joining an existing chat
