@@ -8,15 +8,15 @@
 /* Default timeout can be changed using clnt_control() */
 static struct timeval TIMEOUT = { 25, 0 };
 
-int *
+clientlist *
 join_1(argp, clnt)
 	cname *argp;
 	CLIENT *clnt;
 {
-	static int clnt_res;
+	static clientlist clnt_res;
 
 	memset((char *)&clnt_res, 0, sizeof(clnt_res));
-	if (clnt_call(clnt, JOIN, xdr_cname, argp, xdr_int, &clnt_res, TIMEOUT) != RPC_SUCCESS)
+	if (clnt_call(clnt, JOIN, xdr_cname, argp, xdr_clientlist, &clnt_res, TIMEOUT) != RPC_SUCCESS)
 		return (NULL);
 	return (&clnt_res);
 }
@@ -35,40 +35,14 @@ send_1(argp, clnt)
 }
 
 int *
-deliver_1(argp, clnt)
-	msg_recv *argp;
+exit_1(argp, clnt)
+	msg_send *argp;
 	CLIENT *clnt;
 {
 	static int clnt_res;
 
 	memset((char *)&clnt_res, 0, sizeof(clnt_res));
-	if (clnt_call(clnt, DELIVER, xdr_msg_recv, argp, xdr_int, &clnt_res, TIMEOUT) != RPC_SUCCESS)
-		return (NULL);
-	return (&clnt_res);
-}
-
-int *
-listnames_1(argp, clnt)
-	clientlist *argp;
-	CLIENT *clnt;
-{
-	static int clnt_res;
-
-	memset((char *)&clnt_res, 0, sizeof(clnt_res));
-	if (clnt_call(clnt, LISTNAMES, xdr_clientlist, argp, xdr_int, &clnt_res, TIMEOUT) != RPC_SUCCESS)
-		return (NULL);
-	return (&clnt_res);
-}
-
-msg_recv *
-req_msg_1(argp, clnt)
-	int *argp;
-	CLIENT *clnt;
-{
-	static msg_recv clnt_res;
-
-	memset((char *)&clnt_res, 0, sizeof(clnt_res));
-	if (clnt_call(clnt, REQ_MSG, xdr_int, argp, xdr_msg_recv, &clnt_res, TIMEOUT) != RPC_SUCCESS)
+	if (clnt_call(clnt, EXIT, xdr_msg_send, argp, xdr_int, &clnt_res, TIMEOUT) != RPC_SUCCESS)
 		return (NULL);
 	return (&clnt_res);
 }

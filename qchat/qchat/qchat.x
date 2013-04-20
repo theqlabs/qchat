@@ -8,7 +8,7 @@
 
 const MAX_MSG_LEN = 512;        /* 64 Bytes */
 const MAX_USR_LEN = 32;         /* 4 Bytes  */
-const MAX_IP_LEN =  32;		/* 4 Bytes  */
+const MAX_IP_LEN =  32;		    /* 4 Bytes  */
 
 typedef string msg_send<MAX_MSG_LEN>;
 typedef string uname<MAX_USR_LEN>;
@@ -20,7 +20,6 @@ struct cname {
     int leader_flag;
 };
 typedef struct cname cname;
-
 typedef cname clientlist<>;
 
 struct msg_recv {
@@ -31,10 +30,8 @@ struct msg_recv {
 
 program QCHAT {
     version QCHATVERS {
-        int JOIN(cname) = 1;
+        clientlist JOIN(cname) = 1;
         int SEND(msg_send) = 2;
-        int DELIVER(msg_recv) = 3;
-        int LISTNAMES(clientlist) = 4;
-        msg_recv REQ_MSG(int) = 5;
+        int EXIT(msg_send) = 3;
     } = 1;
 } = 0x20000001;
