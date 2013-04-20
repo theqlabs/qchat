@@ -5,10 +5,10 @@
 
 #include "qchat.h"
 
-//clientlist *join_1(argp, rqstp)
-clientlist *join_1(cname *argp, struct svc_req *rqstp) {	
-	//cname *argp;
-	//struct svc_req *rqstp; {
+clientlist *
+join_1_svc(argp, rqstp)
+	cname *argp;
+	struct svc_req *rqstp; {
 
 	static clientlist result;
 
@@ -25,7 +25,7 @@ clientlist *join_1(cname *argp, struct svc_req *rqstp) {
 }
 
 int *
-send_1(argp, rqstp)
+send_1_svc(argp, rqstp)
 	msg_send *argp;
 	struct svc_req *rqstp; {
 
@@ -45,7 +45,7 @@ send_1(argp, rqstp)
 }
 
 int *
-exit_1(argp, rqstp)
+exit_1_svc(argp, rqstp)
 	msg_send *argp;
 	struct svc_req *rqstp; {
 
