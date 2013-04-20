@@ -18,21 +18,34 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
+#include <pthread.h>
 
 #include "qchat.h"
+
+int messageHandler(cname* me) {
+  if(me == NULL) {
+    printf("Socket listener received an empty client object. Exiting...\n");
+    return 1;
+  }
+
+  clist = join_1(me);
+  printf("Succeeded, current users:\n");
+  print_client_list(clist);
+
+
+}
+
+const int LOCALPORT = 10001;
+const int PORTSTRLEN = 6;
+int isSequencer = 0;
+clientlist* clist;
 
 
 int main(int argc, char * argv[]) {
 
   CLIENT *clnt;
-  void *result_1;
-  char * printmessage_1_arg;
   char *localHostname = (char*) malloc((size_t)INET_ADDRSTRLEN);
-  const int LOCALPORT = 10001;
-  const int PORTSTRLEN = 6;
-  int isSequencer = 0;
-  int seqInitialized = FALSE;
-  struct clientlist* clientList;
+
 
   if (localHostname == NULL) {
     printf("Chat localHostname memory allocation failed. Exiting...\n");
@@ -63,6 +76,7 @@ int main(int argc, char * argv[]) {
   if (socketadd != NULL) {
     free(socketadd);
   }
+
   if (sock == -1) {
     printf("Error discovering local IP address. Exiting...\n");
     return 1;
@@ -90,7 +104,7 @@ int main(int argc, char * argv[]) {
   char* remoteHostname;
 
   cname* me = (cname *) malloc(sizeof(cname));
-  //clientList =
+  //clist =
   if (me == NULL) {
     printf("Error on client name memory allocation. Exiting...\n");
     return 1;
@@ -106,17 +120,18 @@ int main(int argc, char * argv[]) {
   strncat(localIpPortStr, portString, strlen(portString));
   memcpy((void*)&(*me).hostname, localIpPortStr, (size_t)MAX_IP_LEN);
 
+  //Create the RPC client objects
   if (argc == 3) {
     //Joining an existing chat
     remoteHostname = argv[2];
     printf("%s joining an existing chat on %s, listening on %s\n", usrName, remoteHostname, localHostname);
     // create a CLIENT handle
-    clnt = clnt_create(localHostname, QCHAT, QCHATVERS, (char*)"udp");
+    clnt = clnt_create(remoteHostname, QCHAT, QCHATVERS, (char*)"udp");
 
     // if connection doesn't succeed
     if (clnt == NULL) {
-      clnt_pcreateerror(localHostname);
-      printf("Sorry, no chat is active on %s, try again later. ", localHostname);
+      clnt_pcreateerror(remoteHostname);
+      printf("Sorry, no chat is active on %s, try again later.\nBye.\n", remoteHostname);
       return 1;
     }
 
@@ -124,35 +139,54 @@ int main(int argc, char * argv[]) {
     //Creating a new chat
     printf("%s started a new chat, listening on %s\n", usrName, localHostname);
     isSequencer = 1;
-
+    clnt = clnt_create(localHostname, QCHAT, QCHATVERS, (char*)"udp");
+    if (clnt == NULL) {
+      clnt_pcreateerror(localHostname);
+      printf("Unable to activate a new chat on %s, try again later. ", localHostname);
+      return 1;
+    }
   }
 
   me->leader_flag = isSequencer;
 
-  if(isSequencer == 1) {
-
+  pthread_t handerThread;
+  pthread_attr_t attr;
+  pthread_attr_init(&attr);
+  pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
+  pthread_create(&handlerThread, attr, messageHandler, me);
+  pthread_attr_destroy(&attr);
+  char inputmsg[MAX_MSG_LEN];
+  while (inputmsg[0]!= EOF) {
+    if (fgets(inputmsg, sizeof inputmsg, stdin)) {
+      inputmsg[MAX_MSG_LEN-1]='\0';
+      inputmsg[strlen(inputmsg)-1] = '\0';
+      puts(inputmsg);
+      int* result = send_1(&inputmsg);
+    }
   }
 
-  //while (true)
 
-  //string myMessage = "";
-
-
-
-
-
-  // // run PRINTMESSAGE function from qchat_server.cpp
-  // result_1 = printmessage_1(&printmessage_1_arg, clnt);
-
-  // printf("Welcome " << usrName << " to qchat on " << localHostname << endl;
-  // printf(usrName << ": ";
-  // cin >> myMessage;
+  if(me!= NULL) {
+    free(me);
+  }
 
   if(localHostname != NULL) {
     free(localHostname);
   }
   return 0;
 
+}
+
+void print_client_list(clientlist * clist) {
+  int numClients = sizeof(*clist)/sizeof(cname), i;
+  for (i=0 ; < numClients; i++)
+  {
+    printf("%s %s", clist[i].userName, clist[i].hostname);
+    if (clist[i].leader_flag = 1) {
+      printf("(Leader)");
+    }
+    printf("\n");
+  }
 }
 
 int * join_1_svc (cname * client, struct svc_req* req) {
