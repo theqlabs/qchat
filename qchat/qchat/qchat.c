@@ -22,16 +22,19 @@
 
 #include "qchat.h"
 
+void print_client_list(clientlist *);
+
 int messageHandler(cname* me) {
   if(me == NULL) {
     printf("Socket listener received an empty client object. Exiting...\n");
     return 1;
   }
 
-  clist = join_1(me);
+  //clientlist *clist = join_1(me);
+  clientlist *clist = NULL;
   printf("Succeeded, current users:\n");
-  print_client_list(clist);
-
+  //print_client_list(clist);
+  return 1;
 
 }
 
@@ -149,11 +152,11 @@ int main(int argc, char * argv[]) {
 
   me->leader_flag = isSequencer;
 
-  pthread_t handerThread;
+  pthread_t handlerThread;
   pthread_attr_t attr;
   pthread_attr_init(&attr);
   pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
-  pthread_create(&handlerThread, attr, messageHandler, me);
+  pthread_create(&handlerThread, &attr, messageHandler, me);
   pthread_attr_destroy(&attr);
   char inputmsg[MAX_MSG_LEN];
   while (inputmsg[0]!= EOF) {
@@ -161,7 +164,7 @@ int main(int argc, char * argv[]) {
       inputmsg[MAX_MSG_LEN-1]='\0';
       inputmsg[strlen(inputmsg)-1] = '\0';
       puts(inputmsg);
-      int* result = send_1(&inputmsg);
+      //int* result = send_1(&inputmsg);
     }
   }
 
@@ -179,26 +182,12 @@ int main(int argc, char * argv[]) {
 
 void print_client_list(clientlist * clist) {
   int numClients = sizeof(*clist)/sizeof(cname), i;
-  for (i=0 ; < numClients; i++)
+  for (i=0 ; i < numClients; i++)
   {
-    printf("%s %s", clist[i].userName, clist[i].hostname);
-    if (clist[i].leader_flag = 1) {
-      printf("(Leader)");
-    }
+    //printf("%s %s", ((cname)clist[i]).userName, ((cname)clist[i]).hostname);
+    //if (((cname)clist[i]).leader_flag = 1) {
+    //  printf("(Leader)");
+   // }
     printf("\n");
   }
 }
-
-int * join_1_svc (cname * client, struct svc_req* req) {
-  return NULL;
-}
-
-int * send_1_svc(msg_send * msg, struct svc_req* req) {
-  return NULL;
-}
-
-int * deliver_1_svc(msg_recv * msg, struct svc_req* req) {
-  return NULL;
-}
-
-
