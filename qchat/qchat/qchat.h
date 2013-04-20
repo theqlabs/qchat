@@ -101,54 +101,36 @@ bool_t xdr_msg_recv();
 
 #ifdef __cplusplus
 #define JOIN ((rpc_uint)1)
-extern "C" int * join_1(cname *, CLIENT *);
-extern "C" int * join_1_svc(cname *, struct svc_req *);
+extern "C" clientlist * join_1(cname *, CLIENT *);
+extern "C" clientlist * join_1_svc(cname *, struct svc_req *);
 #define SEND ((rpc_uint)2)
 extern "C" int * send_1(msg_send *, CLIENT *);
 extern "C" int * send_1_svc(msg_send *, struct svc_req *);
-#define DELIVER ((rpc_uint)3)
-extern "C" int * deliver_1(msg_recv *, CLIENT *);
-extern "C" int * deliver_1_svc(msg_recv *, struct svc_req *);
-#define LISTNAMES ((rpc_uint)4)
-extern "C" int * listnames_1(clientlist *, CLIENT *);
-extern "C" int * listnames_1_svc(clientlist *, struct svc_req *);
-#define REQ_MSG ((rpc_uint)5)
-extern "C" msg_recv * req_msg_1(int *, CLIENT *);
-extern "C" msg_recv * req_msg_1_svc(int *, struct svc_req *);
+#define EXIT ((rpc_uint)3)
+extern "C" int * exit_1(msg_send *, CLIENT *);
+extern "C" int * exit_1_svc(msg_send *, struct svc_req *);
 
 #elif __STDC__
 #define JOIN ((rpc_uint)1)
-extern  int * join_1(cname *, CLIENT *);
-extern  int * join_1_svc(cname *, struct svc_req *);
+extern  clientlist * join_1(cname *, CLIENT *);
+extern  clientlist * join_1_svc(cname *, struct svc_req *);
 #define SEND ((rpc_uint)2)
 extern  int * send_1(msg_send *, CLIENT *);
 extern  int * send_1_svc(msg_send *, struct svc_req *);
-#define DELIVER ((rpc_uint)3)
-extern  int * deliver_1(msg_recv *, CLIENT *);
-extern  int * deliver_1_svc(msg_recv *, struct svc_req *);
-#define LISTNAMES ((rpc_uint)4)
-extern  int * listnames_1(clientlist *, CLIENT *);
-extern  int * listnames_1_svc(clientlist *, struct svc_req *);
-#define REQ_MSG ((rpc_uint)5)
-extern  msg_recv * req_msg_1(int *, CLIENT *);
-extern  msg_recv * req_msg_1_svc(int *, struct svc_req *);
+#define EXIT ((rpc_uint)3)
+extern  int * exit_1(msg_send *, CLIENT *);
+extern  int * exit_1_svc(msg_send *, struct svc_req *);
 
 #else /* Old Style C */
 #define JOIN ((rpc_uint)1)
-extern  int * join_1();
-extern  int * join_1_svc();
+extern  clientlist * join_1();
+extern  clientlist * join_1_svc();
 #define SEND ((rpc_uint)2)
 extern  int * send_1();
 extern  int * send_1_svc();
-#define DELIVER ((rpc_uint)3)
-extern  int * deliver_1();
-extern  int * deliver_1_svc();
-#define LISTNAMES ((rpc_uint)4)
-extern  int * listnames_1();
-extern  int * listnames_1_svc();
-#define REQ_MSG ((rpc_uint)5)
-extern  msg_recv * req_msg_1();
-extern  msg_recv * req_msg_1_svc();
+#define EXIT ((rpc_uint)3)
+extern  int * exit_1();
+extern  int * exit_1_svc();
 #endif /* Old Style C */
 
 #endif /* !_QCHAT_H_RPCGEN */

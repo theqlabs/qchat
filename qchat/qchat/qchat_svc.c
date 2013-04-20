@@ -73,9 +73,7 @@ qchat_1(rqstp, transp)
 	union {
 		cname join_1_arg;
 		msg_send send_1_arg;
-		msg_recv deliver_1_arg;
-		clientlist listnames_1_arg;
-		int req_msg_1_arg;
+		msg_send exit_1_arg;
 	} argument;
 	char *result;
 	bool_t (*xdr_argument)(), (*xdr_result)();
@@ -90,7 +88,7 @@ qchat_1(rqstp, transp)
 
 	case JOIN:
 		xdr_argument = xdr_cname;
-		xdr_result = xdr_int;
+		xdr_result = xdr_clientlist;
 		local = (char *(*)()) join_1_svc;
 		break;
 
@@ -100,22 +98,10 @@ qchat_1(rqstp, transp)
 		local = (char *(*)()) send_1_svc;
 		break;
 
-	case DELIVER:
-		xdr_argument = xdr_msg_recv;
+	case EXIT:
+		xdr_argument = xdr_msg_send;
 		xdr_result = xdr_int;
-		local = (char *(*)()) deliver_1_svc;
-		break;
-
-	case LISTNAMES:
-		xdr_argument = xdr_clientlist;
-		xdr_result = xdr_int;
-		local = (char *(*)()) listnames_1_svc;
-		break;
-
-	case REQ_MSG:
-		xdr_argument = xdr_int;
-		xdr_result = xdr_msg_recv;
-		local = (char *(*)()) req_msg_1_svc;
+		local = (char *(*)()) exit_1_svc;
 		break;
 
 	default:
