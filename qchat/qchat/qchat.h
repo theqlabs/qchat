@@ -3,6 +3,8 @@
  * It was generated using rpcgen.
  */
 
+#include <string.h>
+
 #ifndef _QCHAT_H_RPCGEN
 #define _QCHAT_H_RPCGEN
 

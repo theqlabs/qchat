@@ -12,3 +12,4 @@ $(EXECUTABLE): $(OBJECTS)
 
 clean:
 	rm -rf *o qchat
+	rm qchat_svc

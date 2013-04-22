@@ -2,15 +2,31 @@
 // qchat -
 // this is the RPC code executed only by the sequencer
 // 
+#include <stdio.h>
+#include <stdint.h>
+#include <stdlib.h>
 
 #include "qchat.h"
 
-clientlist *
-join_1_svc(argp, rqstp)
-	cname *argp;
-	struct svc_req *rqstp; {
+static clientlist *clist;
+int initialized = FALSE;
 
-	static clientlist result;
+int init_data_structures() {
+
+	// init data structure function
+	clist = malloc(sizeof(clist));
+	// init data structure fields
+
+	//(*clist).clientlist_len = 0;		// Difference between this
+	clist->clientlist_len = 0;			// ... and this?
+
+	initialized = TRUE;
+
+	return 0;
+
+}
+
+clientlist *join_1_svc(cname *test, struct svc_req *rqstp) {
 
 	// clientlist is an array of cname structs
 	// struct cname {
@@ -19,22 +35,26 @@ join_1_svc(argp, rqstp)
 	//		int leader_flag;
 	// };
 
-	// takes in struct CNAME from client
+	// takes in struct CNAME (me) from client
 	// returns clientlist when done
 
 	// Add to clientlist
 	// return current clientlist
 	// multicast new member msg, seq#
 
-	
+	printf("entering join_1_svc");
 
-	return(&result);
+	if (!initialized) {
+		init_data_structures();
+	}
+
+	test->userName = (uname)"biatch";
+	clist[clist->clientlist_len++].clientlist_val = test;
+
+	return(clist);
 }
 
-int *
-send_1_svc(argp, rqstp)
-	msg_send *argp;
-	struct svc_req *rqstp; {
+int *send_1_svc(msg_send *argp, struct svc_req *rqstp) {
 
 	static int result;
 
@@ -51,10 +71,7 @@ send_1_svc(argp, rqstp)
 	return(&result);
 }
 
-int *
-exit_1_svc(argp, rqstp)
-	msg_send *argp;
-	struct svc_req *rqstp; {
+int *exit_1_svc(msg_send *argp, struct svc_req *rqstp) {
 
 	static int result;
 

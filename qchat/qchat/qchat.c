@@ -8,7 +8,6 @@
 //  @authors:
 //  Andrew Righter - @theqlabs (GitHub/Twitter)
 //  Michael Collis - mcollis@cis.upenn.edu
-//
 
 #include <stdio.h>
 #include <string.h>
@@ -24,9 +23,11 @@
 
 #include "qchat.h"
 
+// Function Declarations
 void print_client_list(clientlist *);
 void getLocalIp(char*);
 
+// Constants, Scope: Global
 const int LOCALPORT = 10001;
 const int PORTSTRLEN = 6;
 clientlist* clist;
@@ -67,19 +68,23 @@ int main(int argc, char * argv[]) {
   CLIENT *clnt;
   char *localHostname = (char*) malloc((size_t)INET_ADDRSTRLEN);
 
-
+  // How is this NOT NULL, when it doesn't get called until further down?
   if (localHostname == NULL) {
     printf("Chat localHostname memory allocation failed. Exiting...\n");
     return 1;
   }
 
-  if (argc > 3 || argc < 2) {
+  // Why are we allowing for 2 arguments? Isn't a hostname required?
+  //if (argc > 3 || argc < 2) {
+  if (argc != 3) {
     printf("Usage ./dchat nickname [host server IP:PORT]\n");
     return 1;
   }
 
+  // Obtains local IP address of the client
   getLocalIp(localHostname);
   if (strlen(localHostname) == 0) {
+    printf("Could not obtain a local hostname");
     return 1;
   }
 
@@ -88,9 +93,11 @@ int main(int argc, char * argv[]) {
     //Truncate your foolishly long username
     argv[1][MAX_USR_LEN-1] = '\0';
   }
+  // Sets user input nickname to usrName var
   uname usrName = (uname) argv[1];
   char* remoteHostname;
 
+  // Creates cname struct called me
   cname* me = (cname *) malloc(sizeof(cname));
   //clist =
   if (me == NULL) {
@@ -98,8 +105,10 @@ int main(int argc, char * argv[]) {
     return 1;
   }
 
+  // Throws the usrName the user input into the cname struct (me) field userName
   memcpy(&(me->userName), usrName, strlen(usrName));
 
+  // A bloody mess
   char portString[PORTSTRLEN];
   sprintf(portString, "%d", LOCALPORT);
   char localIpPortStr[MAX_IP_LEN];
@@ -136,16 +145,36 @@ int main(int argc, char * argv[]) {
     }
   }
 
+  // Moves isSequencer value into [cname struct me], field leader_flag
   me->leader_flag = isSequencer;
-  clientlist *clist;
-  //clientlist *clist = join_1(&me, clnt);
+  //clientlist *clist;
 
+  // BEGIN
+  // DEBUGGING CALL TO JOIN
+  cname test;
+  test.userName=(uname)"andrew";
+  test.hostname=(ip_port)"127.0.0.1:25001";   // Should this be statically set?
+  test.leader_flag=0;
+
+  clientlist *clist = join_1(&test, clnt);
+  if (clist == (clientlist *) NULL) {
+    clnt_perror(clnt, "call failed");
+    return 1;
+  }
+  else {
+    printf("returning from join_1_svc");
+  }
+  // END DEBUG CALL TO JOIN
+
+  // Multithreading Nonsense
   pthread_t handlerThread;
   pthread_attr_t attr;
   pthread_attr_init(&attr);
   pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
   pthread_create(&handlerThread, &attr, messageHandler, (void*)clist);
+
   //
+  // The code that mimics chat functionality by replaying inputmsg
   char inputmsg[MAX_MSG_LEN];
   while (inputmsg[0]!= EOF) {
     if (fgets(inputmsg, sizeof inputmsg, stdin)) {
@@ -156,12 +185,12 @@ int main(int argc, char * argv[]) {
     }
   }
 
-  pthread_attr_destroy(&attr);
+  //pthread_attr_destroy(&attr);
 
+  // Cleaning up memory!
   if(me!= NULL) {
     free(me);
   }
-
   if(localHostname != NULL) {
     free(localHostname);
   }
@@ -169,6 +198,7 @@ int main(int argc, char * argv[]) {
 
 }
 
+// An absolutely ridiculous way to get a local IP address
 void getLocalIp(char* buf) {
   //Local IP address discovery protocol
   buf[0] = '\0';
@@ -221,3 +251,5 @@ void print_client_list(clientlist * clist) {
     printf("\n");
   }
 }
+
+
