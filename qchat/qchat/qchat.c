@@ -20,24 +20,38 @@
 #include <pthread.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <signal.h>
 
 #include "qchat.h"
 
-// Function Declarations
+// Function Protptypes
 void print_client_list(clientlist *);
 void getLocalIp(char*);
 
 // Constants, Scope: Global
 const int LOCALPORT = 10001;
 const int PORTSTRLEN = 6;
+const int HEARTBEAT_DELAY = 3000;
 clientlist* clist;
+CLIENT *clnt;
+
+static void sig_handler(int signal) {
+  if(signal = SIGTERM) {
+    printf("Quitting thread\n");
+    pthread_exit(NULL);
+  }
+}
 
 void* messageHandler(void* inputclist) {
-  printf("Thread created successfully\n");
+  if (signal(SIGTERM, sig_handler) == SIG_ERR) {
+        fputs("Error occurred setting a SIGTERM handler.\n", stderr);
+        pthread_exit(NULL);
+    }
+
   clientlist* clist = (clientlist*) inputclist;
   if(inputclist == NULL) {
     printf("Socket listener received an empty clientlist. Exiting...\n");
-    return (void*)1;
+    pthread_exit(NULL);
   }
 
   printf("Succeeded, current users:\n");
@@ -45,7 +59,7 @@ void* messageHandler(void* inputclist) {
   int sockid;
   if((sockid = socket(PF_INET, SOCK_DGRAM, 0)) <0) {
     perror("Error creating listening UDP socket");
-    return (void *)1;
+    pthread_exit(NULL);
   }
 
   struct sockaddr_in* socketadd = (struct sockaddr_in*) malloc(sizeof(struct sockaddr_in));
@@ -55,27 +69,46 @@ void* messageHandler(void* inputclist) {
   if((bind(sockid, (struct sockaddr*)socketadd, sizeof(*socketadd)))<0) {
     close(sockid);
     perror("Error binding to listening UDP socket");
-    return (void *)1;
+    pthread_exit(NULL);
   }
   printf("Server socket ok\n");
   close(sockid);
-  return (void *)1;
-
+  pthread_exit(NULL);
 }
+
+void* electionHandler() {
+
+if (signal(SIGTERM, sig_handler) == SIG_ERR) {
+        fputs("Error occurred setting a SIGTERM handler.\n", stderr);
+        pthread_exit(NULL);
+    }
+
+int hbIndex = 0;
+while (hbIndex >= 0) {
+  //int * result = heartbeat_1(&hbIndex, clnt);
+  hbIndex ++;
+  //if(result == NULL) {
+    //SHIT! Lenin is dead. Call an election.
+  //}
+  printf("%d\n", hbIndex);
+  sleep(HEARTBEAT_DELAY);
+}
+pthread_exit(NULL);
+}
+
 
 int main(int argc, char * argv[]) {
   int isSequencer = 0;
-  CLIENT *clnt;
   char *localHostname = (char*) malloc((size_t)INET_ADDRSTRLEN);
+
+
 
   if (localHostname == NULL) {
     printf("Chat localHostname memory allocation failed. Exiting...\n");
     return 1;
   }
 
-  // Why are we allowing for 2 arguments? Isn't a hostname required?
-  //if (argc > 3 || argc < 2) {
-  if (argc != 3) {
+  if (argc > 3 || argc < 2) {
     printf("Usage ./dchat nickname [host server IP:PORT]\n");
     return 1;
   }
@@ -150,41 +183,48 @@ int main(int argc, char * argv[]) {
 
   // BEGIN
   // DEBUGGING CALL TO JOIN
-  test = malloc(sizeof(cname));
-  test->userName = (uname) "andrew";
-  test->hostname = (ip_port) "127.0.0.1:25001";
-  test->leader_flag = 0;
+  // test = malloc(sizeof(cname));
+  // test->userName = (uname) "andrew";
+  // test->hostname = (ip_port) "127.0.0.1:25001";
+  // test->leader_flag = 0;
 
-  clientlist *clist = join_1(&test, clnt);
-  if (clist == (clientlist *) NULL) {
-    clnt_perror(clnt, "call failed");
-    return 1;
-  }
-  else {
-    printf("returning from join_1_svc");
-  }
+  // clientlist *clist = join_1(&test, clnt);
+  // if (clist == (clientlist *) NULL) {
+  //   clnt_perror(clnt, "call failed");
+  //   return 1;
+  // }
+  // else {
+  //   printf("returning from join_1_svc");
+  // }
   // END DEBUG CALL TO JOIN
 
-  // Multithreading Nonsense
+  // Message handling thread
   pthread_t handlerThread;
   pthread_attr_t attr;
   pthread_attr_init(&attr);
   pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
   pthread_create(&handlerThread, &attr, messageHandler, (void*)clist);
 
+  // Message handling thread
+  pthread_t electionThread;
+  pthread_create(&electionThread, &attr, electionHandler, NULL);
+
   //
   // The code that mimics chat functionality by replaying inputmsg
   char inputmsg[MAX_MSG_LEN];
-  while (inputmsg[0]!= EOF) {
-    if (fgets(inputmsg, sizeof inputmsg, stdin)) {
+  while (read(0, inputmsg, MAX_MSG_LEN) > 0) {
+//
       inputmsg[MAX_MSG_LEN-1]='\0';
       inputmsg[strlen(inputmsg)-1] = '\0';
       puts(inputmsg);
       //int* result = send_1(&inputmsg);
-    }
+//    }
   }
 
-  //pthread_attr_destroy(&attr);
+  printf("Killing threads\n");
+  pthread_attr_destroy(&attr);
+  pthread_kill(handlerThread, SIGTERM);
+  pthread_kill(electionThread, SIGTERM);
 
   // Cleaning up memory!
   if(me!= NULL) {

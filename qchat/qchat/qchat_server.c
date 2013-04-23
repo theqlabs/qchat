@@ -1,7 +1,7 @@
 //
 // qchat -
 // this is the RPC code executed only by the sequencer
-// 
+//
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -62,7 +62,7 @@ int *send_1_svc(msg_send *argp, struct svc_req *rqstp) {
 	// assign seq#
 	// multicast to clients, on fail/retry:
 	// 		remove client from clist
-	//		multicast exist msg, seq# 
+	//		multicast exist msg, seq#
 
 
 
@@ -88,17 +88,12 @@ int *exit_1_svc(msg_send *argp, struct svc_req *rqstp) {
 }
 
 int *
-heartbeat_1(argp, rqstp)
+heartbeat_1_svc(argp, rqstp)
 	int *argp;
 	struct svc_req *rqstp;
 {
-
-	static int  result;
-
-	/*
-	 * insert server code here
-	 */
-
-	return(&result);
+	static int result = 0;
+	result = *argp ++;
+	return((&result));
 }
 
