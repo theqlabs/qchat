@@ -68,7 +68,6 @@ int main(int argc, char * argv[]) {
   CLIENT *clnt;
   char *localHostname = (char*) malloc((size_t)INET_ADDRSTRLEN);
 
-  // How is this NOT NULL, when it doesn't get called until further down?
   if (localHostname == NULL) {
     printf("Chat localHostname memory allocation failed. Exiting...\n");
     return 1;
@@ -151,10 +150,10 @@ int main(int argc, char * argv[]) {
 
   // BEGIN
   // DEBUGGING CALL TO JOIN
-  cname test;
-  test.userName=(uname)"andrew";
-  test.hostname=(ip_port)"127.0.0.1:25001";   // Should this be statically set?
-  test.leader_flag=0;
+  test = malloc(sizeof(cname));
+  test->userName = (uname) "andrew";
+  test->hostname = (ip_port) "127.0.0.1:25001";
+  test->leader_flag = 0;
 
   clientlist *clist = join_1(&test, clnt);
   if (clist == (clientlist *) NULL) {

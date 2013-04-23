@@ -42,13 +42,11 @@ clientlist *join_1_svc(cname *test, struct svc_req *rqstp) {
 	// return current clientlist
 	// multicast new member msg, seq#
 
-	printf("entering join_1_svc");
-
 	if (!initialized) {
 		init_data_structures();
 	}
 
-	test->userName = (uname)"biatch";
+	test->userName = (uname) "biatch";
 	clist[clist->clientlist_len++].clientlist_val = test;
 
 	return(clist);
@@ -85,6 +83,21 @@ int *exit_1_svc(msg_send *argp, struct svc_req *rqstp) {
 	// multicast exist msg, seq#
 
 
+
+	return(&result);
+}
+
+int *
+heartbeat_1(argp, rqstp)
+	int *argp;
+	struct svc_req *rqstp;
+{
+
+	static int  result;
+
+	/*
+	 * insert server code here
+	 */
 
 	return(&result);
 }

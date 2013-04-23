@@ -33,5 +33,6 @@ program QCHAT {
         clientlist JOIN(cname) = 1;
         int SEND(msg_send) = 2;
         int EXIT(msg_send) = 3;
+        int HEARTBEAT(int) = 4;
     } = 1;
 } = 0x20000001;

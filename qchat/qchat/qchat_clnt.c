@@ -46,3 +46,16 @@ exit_1(argp, clnt)
 		return (NULL);
 	return (&clnt_res);
 }
+
+int *
+heartbeat_1(argp, clnt)
+	int *argp;
+	CLIENT *clnt;
+{
+	static int clnt_res;
+
+	memset((char *)&clnt_res, 0, sizeof(clnt_res));
+	if (clnt_call(clnt, HEARTBEAT, xdr_int, argp, xdr_int, &clnt_res, TIMEOUT) != RPC_SUCCESS)
+		return (NULL);
+	return (&clnt_res);
+}

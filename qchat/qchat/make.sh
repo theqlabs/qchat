@@ -1,6 +1,8 @@
 
+# -ggdb3 includes all info into symbol tables
+# -O0 shuts off all optimizations for debugging results
 
-CFLAGS="-g -Wall -pedantic -O0 -std=gnu99"
+CFLAGS="-w -ggdb3 -Wall -pedantic -O0 -std=gnu99"
 
 # make client
 cc $CFLAGS -c -o qchat.o qchat.c
