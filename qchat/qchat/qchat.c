@@ -21,23 +21,25 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <signal.h>
+#include <stdint.h>
 
 #include "qchat.h"
 
 // Function Protptypes
 void print_client_list(clientlist *);
 void getLocalIp(char*);
+void holdElection();
 
 // Constants, Scope: Global
 const int LOCALPORT = 10001;
 const int PORTSTRLEN = 6;
 const int HEARTBEAT_DELAY = 3000;
+int isSequencer = 0;
 clientlist* clist;
 CLIENT *clnt;
 
 static void sig_handler(int signal) {
   if(signal = SIGTERM) {
-    printf("Quitting thread\n");
     pthread_exit(NULL);
   }
 }
@@ -72,6 +74,9 @@ void* messageHandler(void* inputclist) {
     pthread_exit(NULL);
   }
   printf("Server socket ok\n");
+
+  //Receive messages and do stuff with them
+
   close(sockid);
   pthread_exit(NULL);
 }
@@ -85,11 +90,12 @@ if (signal(SIGTERM, sig_handler) == SIG_ERR) {
 
 int hbIndex = 0;
 while (hbIndex >= 0) {
-  //int * result = heartbeat_1(&hbIndex, clnt);
+  int64_t * result = heartbeat_1(&hbIndex, clnt);
   hbIndex ++;
-  //if(result == NULL) {
+  if(result == NULL) {
     //SHIT! Lenin is dead. Call an election.
-  //}
+    holdElection();
+  }
   printf("%d\n", hbIndex);
   sleep(HEARTBEAT_DELAY);
 }
@@ -98,7 +104,7 @@ pthread_exit(NULL);
 
 
 int main(int argc, char * argv[]) {
-  int isSequencer = 0;
+
   char *localHostname = (char*) malloc((size_t)INET_ADDRSTRLEN);
 
 
@@ -221,7 +227,6 @@ int main(int argc, char * argv[]) {
 //    }
   }
 
-  printf("Killing threads\n");
   pthread_attr_destroy(&attr);
   pthread_kill(handlerThread, SIGTERM);
   pthread_kill(electionThread, SIGTERM);
@@ -291,4 +296,7 @@ void print_client_list(clientlist * clist) {
   }
 }
 
+void holdElection() {
+  //Elect a new despot
+}
 

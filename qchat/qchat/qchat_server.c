@@ -89,10 +89,10 @@ int *exit_1_svc(msg_send *argp, struct svc_req *rqstp) {
 
 int *
 heartbeat_1_svc(argp, rqstp)
-	int *argp;
+	int64_t *argp;
 	struct svc_req *rqstp;
 {
-	static int result = 0;
+	static int64_t result = 0;
 	result = *argp ++;
 	return((&result));
 }
