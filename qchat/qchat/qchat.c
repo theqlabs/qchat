@@ -30,7 +30,7 @@ void getLocalIp(char*);
 // Constants, Scope: Global
 const int LOCALPORT = 10001;
 const int PORTSTRLEN = 6;
-clientlist* clist;
+//clientlist* clist;                          // Why do we need this?
 
 void* messageHandler(void* inputclist) {
   printf("Thread created successfully\n");
@@ -64,30 +64,87 @@ void* messageHandler(void* inputclist) {
 }
 
 int main(int argc, char * argv[]) {
-  int isSequencer = 0;
+
   CLIENT *clnt;
+  int isSequencer = 0;
+
+  clist  *result_join;
+  cname  userdata;
+
+  // statically assigning for DEBUG reasons:
+  userdata.userName = (uname) "theqlabs";       // obtain from argv[1]
+  userdata.hostname = (ip_port) "localhost";    // obtain from getLocalIp()
+  userdata.leader_flag = 0;                     // obtain from int isSequencer
+
+  int  *result_send;
+  msg_send  arg_send;
+
+  int  *result_exit;
+  msg_send  arg_exit;
+
+  int  *result_heartbeat;
+  int  arg_heartbeat;
+
+  clnt = clnt_create(host, QCHAT, QCHATVERS, "udp");
+  if (clnt == NULL) {
+    clnt_pcreateerror(host);
+    exit(1);
+  }
+  
+  result_join = join_1(&userdata, clnt);
+  if (result_1 == NULL) {
+    clnt_perror(clnt, "call failed:");
+  }
+
+  printf("clientlist_len: %d\n", result_join->clientlist.clientlist_len);
+  printf("clientlist_val: %s\n", result_join->clientlist.clientlist_val);
+
+  result_send = send_1(&arg_send, clnt);
+  if (result_2 == NULL) {
+    clnt_perror(clnt, "call failed:");
+  }
+
+  result_exit = exit_1(&arg_exit, clnt);
+  if (result_3 == NULL) {
+    clnt_perror(clnt, "call failed:");
+  }
+
+  result_heartbeat = heartbeat_1(&arg_heartbeat, clnt);
+  if (result_4 == NULL) {
+    clnt_perror(clnt, "call failed:");
+  }
+
+  clnt_destroy( clnt );
+
+  /*
   char *localHostname = (char*) malloc((size_t)INET_ADDRSTRLEN);
 
   if (localHostname == NULL) {
     printf("Chat localHostname memory allocation failed. Exiting...\n");
     return 1;
   }
+  */
 
   // Why are we allowing for 2 arguments? Isn't a hostname required?
   //if (argc > 3 || argc < 2) {
+  /*
   if (argc != 3) {
     printf("Usage ./dchat nickname [host server IP:PORT]\n");
     return 1;
   }
+  */
 
   // Obtains local IP address of the client
+  /*
   getLocalIp(localHostname);
   if (strlen(localHostname) == 0) {
     printf("Could not obtain a local hostname");
     return 1;
   }
+  */
 
   //Proceed with chat joining or creation
+  /*
   if (strlen(argv[1]) > MAX_USR_LEN-1) {
     //Truncate your foolishly long username
     argv[1][MAX_USR_LEN-1] = '\0';
@@ -95,19 +152,23 @@ int main(int argc, char * argv[]) {
   // Sets user input nickname to usrName var
   uname usrName = (uname) argv[1];
   char* remoteHostname;
+  */
 
   // Creates cname struct called me
+  /*
   cname* me = (cname *) malloc(sizeof(cname));
   //clist =
   if (me == NULL) {
     printf("Error on client name memory allocation. Exiting...\n");
     return 1;
   }
+  */
 
   // Throws the usrName the user input into the cname struct (me) field userName
-  memcpy(&(me->userName), usrName, strlen(usrName));
+  //memcpy(&(me->userName), usrName, strlen(usrName));
 
   // A bloody mess
+  /*
   char portString[PORTSTRLEN];
   sprintf(portString, "%d", LOCALPORT);
   char localIpPortStr[MAX_IP_LEN];
@@ -116,8 +177,10 @@ int main(int argc, char * argv[]) {
   localIpPortStr[strlen(localHostname)+1] = '\0';
   strncat(localIpPortStr, portString, strlen(portString));
   memcpy(&(me->hostname), localIpPortStr, MAX_IP_LEN);
+  */
 
   //Create the RPC client objects
+  /*
   if (argc == 3) {
     //Joining an existing chat
     remoteHostname = argv[2];
@@ -143,7 +206,9 @@ int main(int argc, char * argv[]) {
       //return 1;
     }
   }
+  */
 
+  /*
   // Moves isSequencer value into [cname struct me], field leader_flag
   me->leader_flag = isSequencer;
   //clientlist *clist;
@@ -194,6 +259,8 @@ int main(int argc, char * argv[]) {
     free(localHostname);
   }
   return 0;
+
+  */
 
 }
 

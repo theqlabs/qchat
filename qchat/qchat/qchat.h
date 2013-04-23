@@ -68,16 +68,19 @@ bool_t xdr_cname();
 #endif /* Old Style C */
 
 
-typedef struct {
-	u_int clientlist_len;
-	cname *clientlist_val;
-} clientlist;
+struct clist {
+	struct {
+		u_int clientlist_len;
+		cname *clientlist_val;
+	} clientlist;
+};
+typedef struct clist clist;
 #ifdef __cplusplus
-extern "C" bool_t xdr_clientlist(XDR *, clientlist*);
+extern "C" bool_t xdr_clist(XDR *, clist*);
 #elif __STDC__
-extern  bool_t xdr_clientlist(XDR *, clientlist*);
+extern  bool_t xdr_clist(XDR *, clist*);
 #else /* Old Style C */
-bool_t xdr_clientlist();
+bool_t xdr_clist();
 #endif /* Old Style C */
 
 
@@ -101,8 +104,8 @@ bool_t xdr_msg_recv();
 
 #ifdef __cplusplus
 #define JOIN ((rpc_uint)1)
-extern "C" clientlist * join_1(cname *, CLIENT *);
-extern "C" clientlist * join_1_svc(cname *, struct svc_req *);
+extern "C" clist * join_1(cname *, CLIENT *);
+extern "C" clist * join_1_svc(cname *, struct svc_req *);
 #define SEND ((rpc_uint)2)
 extern "C" int * send_1(msg_send *, CLIENT *);
 extern "C" int * send_1_svc(msg_send *, struct svc_req *);
@@ -115,8 +118,8 @@ extern "C" int * heartbeat_1_svc(int *, struct svc_req *);
 
 #elif __STDC__
 #define JOIN ((rpc_uint)1)
-extern  clientlist * join_1(cname *, CLIENT *);
-extern  clientlist * join_1_svc(cname *, struct svc_req *);
+extern  clist * join_1(cname *, CLIENT *);
+extern  clist * join_1_svc(cname *, struct svc_req *);
 #define SEND ((rpc_uint)2)
 extern  int * send_1(msg_send *, CLIENT *);
 extern  int * send_1_svc(msg_send *, struct svc_req *);
@@ -129,8 +132,8 @@ extern  int * heartbeat_1_svc(int *, struct svc_req *);
 
 #else /* Old Style C */
 #define JOIN ((rpc_uint)1)
-extern  clientlist * join_1();
-extern  clientlist * join_1_svc();
+extern  clist * join_1();
+extern  clist * join_1_svc();
 #define SEND ((rpc_uint)2)
 extern  int * send_1();
 extern  int * send_1_svc();

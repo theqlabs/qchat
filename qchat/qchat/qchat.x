@@ -1,5 +1,4 @@
 /*
-
     An External Data Representation (XDR) file describing the protocol
     definition for the qChat program. ONC RPCGEN is being used as the
     protocol compiler for this project.
@@ -19,8 +18,12 @@ struct cname {
     ip_port hostname;
     int leader_flag;
 };
+
 typedef struct cname cname;
-typedef cname clientlist<>;
+
+struct clist {
+    cname clientlist<>;
+};
 
 struct msg_recv {
     msg_send msg_sent;
@@ -30,7 +33,7 @@ struct msg_recv {
 
 program QCHAT {
     version QCHATVERS {
-        clientlist JOIN(cname) = 1;
+        clist JOIN(cname) = 1;
         int SEND(msg_send) = 2;
         int EXIT(msg_send) = 3;
         int HEARTBEAT(int) = 4;

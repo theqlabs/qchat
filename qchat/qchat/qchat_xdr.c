@@ -54,12 +54,12 @@ xdr_cname(xdrs, objp)
 }
 
 bool_t
-xdr_clientlist(xdrs, objp)
+xdr_clist(xdrs, objp)
 	XDR *xdrs;
-	clientlist *objp;
+	clist *objp;
 {
 
-	if (!xdr_array(xdrs, (char **)&objp->clientlist_val, (u_int *)&objp->clientlist_len, ~0, sizeof(cname), (xdrproc_t)xdr_cname))
+	if (!xdr_array(xdrs, (char **)&objp->clientlist.clientlist_val, (u_int *)&objp->clientlist.clientlist_len, ~0, sizeof(cname), (xdrproc_t)xdr_cname))
 		return (FALSE);
 	return (TRUE);
 }
