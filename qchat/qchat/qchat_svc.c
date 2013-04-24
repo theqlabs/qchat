@@ -58,6 +58,12 @@ qchat_1(struct svc_req *rqstp, register SVCXPRT *transp)
 		local = (char *(*)(char *, struct svc_req *)) heartbeat_1_svc;
 		break;
 
+	case SHUTDOWNSERV:
+		_xdr_argument = (xdrproc_t) xdr_void;
+		_xdr_result = (xdrproc_t) xdr_void;
+		local = (char *(*)(char *, struct svc_req *)) shutdownserv_1_svc;
+		break;
+
 	default:
 		svcerr_noproc (transp);
 		return;

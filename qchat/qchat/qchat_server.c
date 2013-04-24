@@ -13,6 +13,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <unistd.h>
 #include "qchat.h"
 
 #define INITIAL_CLIENT_COUNT 8
@@ -42,6 +43,53 @@ int init_data_structures() {
 	return 0;
 }
 
+void destroy_data_structures() {
+  if(initialized) {
+    if(clients != NULL) {
+      if (clients->clientlist.clientlist_val != NULL) {
+        free(clients->clientlist.clientlist_val);
+      }
+      free(clients);
+    }
+  }
+}
+
+void multicast_message(msg_recv* message) {
+  
+  if (!initialized) {
+		init_data_structures();
+	}
+
+  int sock = socket(AF_INET, SOCK_DGRAM, 0);
+  if (sock == -1) {
+    return;
+  }
+
+  int i;
+  for(i = 0; i < clients->clientlist.clientlist_len; i++) {
+    const char* userAddr = clients->clientlist.clientlist_val[i].hostname;
+    uint16_t userPort = (uint16_t) clients->clientlist.clientlist_val[i].lport;
+    struct sockaddr_in* socketadd;
+    socketadd = (struct sockaddr_in*) malloc(sizeof(struct sockaddr_in));
+    socketadd->sin_family = AF_INET;
+    socketadd->sin_addr.s_addr = inet_addr(userAddr);
+    socketadd->sin_port = htons(userPort);
+
+    int err = connect(sock, (const struct sockaddr*) socketadd, sizeof(*socketadd));
+    if (socketadd != NULL) {
+      free(socketadd);
+    }
+    if (err < 0) {
+      //Could not connect to client...
+    }
+    write(sock, (void*)message->msg_sent , (size_t) strlen((char*)message->msg_sent));
+    write(sock, (void*)message->user_sent , (size_t) strlen((char*)message->user_sent));
+    write(sock, (void*)message->seq_num , sizeof(int));
+    write(sock, (void*)message->msg_type, sizeof(msg_type_t));
+    close(sock);
+  }
+}
+
 clist *join_1_svc(cname *userdata, struct svc_req *rqstp) {
 
 	// takes in struct CNAME (me) from client
@@ -57,7 +105,12 @@ clist *join_1_svc(cname *userdata, struct svc_req *rqstp) {
 	}
 	
 	// Copy userdata into clist (using mem addrs.):
-	memcpy(&(clients->clientlist.clientlist_val[clients->clientlist.clientlist_len]), userdata, sizeof(cname));
+	memcpy(&(clients->clientlist.clientlist_val[clients->clientlist.clientlist_len].userName), userdata->userName, strlen((char*)userdata->userName));
+memcpy(&(clients->clientlist.clientlist_val[clients->clientlist.clientlist_len].hostname), userdata->hostname, strlen((char*)userdata->hostname));
+  (clients->clientlist.clientlist_val[clients->clientlist.clientlist_len]).lport = userdata.lport;
+  (clients->clientlist.clientlist_val[clients->clientlist.clientlist_len]).leader_flag = userdata.leader_flag;
+  //memcpy(&(clients->clientlist.clientlist_val[clients->clientlist.clientlist_len]), userdata, strlen((char*)cname));
+  
 	clients->clientlist.clientlist_len++;
 
 	// multicast new member to each client
@@ -97,7 +150,7 @@ clist *join_1_svc(cname *userdata, struct svc_req *rqstp) {
 	return(clients);
 }
 
-int *send_1_svc(msg_send *argp, struct svc_req *rqstp) {
+int *send_1_svc(msg_recv *argp, struct svc_req *rqstp) {
 
 	// takes in string msg_send from client
 	// returns int (ACK) when done
@@ -106,7 +159,7 @@ int *send_1_svc(msg_send *argp, struct svc_req *rqstp) {
 	// multicast to clients, on fail/retry:
 	// 		remove client from clist
 	//		multicast exist msg, seq# 
-	static int result;
+	static int result = 0;
 
 	if (!initialized) {
 		init_data_structures();
@@ -115,7 +168,7 @@ int *send_1_svc(msg_send *argp, struct svc_req *rqstp) {
 	return(&result);
 }
 
-int *exit_1_svc(msg_send *argp, struct svc_req *rqstp) {
+int *exit_1_svc(msg_recv *argp, struct svc_req *rqstp) {
 
 	// takes in string msg_send from client
 	// returns int (ACK) when done
@@ -134,7 +187,7 @@ int *exit_1_svc(msg_send *argp, struct svc_req *rqstp) {
 	return(&result);
 }
 
-int *heartbeat_1_svc(uint32_t *argp, struct svc_req *rqstp) {
+uint32_t *heartbeat_1_svc(uint32_t *argp, struct svc_req *rqstp) {
 
 	static uint32_t result = 0;
 
@@ -144,5 +197,11 @@ int *heartbeat_1_svc(uint32_t *argp, struct svc_req *rqstp) {
 	result = *argp ++;
 
 	return((&result));
+}
+
+void *shutdownserv_1_svc(void *rpc, struct svc_req *rqstp) {
+  destroy_data_structures();
+  exit(0);
+  return NULL;
 }
 

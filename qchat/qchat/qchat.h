@@ -23,6 +23,14 @@ typedef char *uname;
 
 typedef char *hoststr;
 
+enum msg_type_t {
+	TEXT = 0,
+	NEWUSER = 1,
+	USEREXIT = 2,
+	ELECTION = 3,
+};
+typedef enum msg_type_t msg_type_t;
+
 struct cname {
 	uname userName;
 	hoststr hostname;
@@ -44,6 +52,7 @@ struct msg_recv {
 	msg_send msg_sent;
 	uname user_sent;
 	int seq_num;
+	msg_type_t msg_type;
 };
 typedef struct msg_recv msg_recv;
 
@@ -63,6 +72,9 @@ extern  int * exit_1_svc(msg_recv *, struct svc_req *);
 #define HEARTBEAT 4
 extern  u_int * heartbeat_1(u_int *, CLIENT *);
 extern  u_int * heartbeat_1_svc(u_int *, struct svc_req *);
+#define SHUTDOWNSERV 5
+extern  void * shutdownserv_1(void *, CLIENT *);
+extern  void * shutdownserv_1_svc(void *, struct svc_req *);
 extern int qchat_1_freeresult (SVCXPRT *, xdrproc_t, caddr_t);
 
 #else /* K&R C */
@@ -78,6 +90,9 @@ extern  int * exit_1_svc();
 #define HEARTBEAT 4
 extern  u_int * heartbeat_1();
 extern  u_int * heartbeat_1_svc();
+#define SHUTDOWNSERV 5
+extern  void * shutdownserv_1();
+extern  void * shutdownserv_1_svc();
 extern int qchat_1_freeresult ();
 #endif /* K&R C */
 
@@ -87,6 +102,7 @@ extern int qchat_1_freeresult ();
 extern  bool_t xdr_msg_send (XDR *, msg_send*);
 extern  bool_t xdr_uname (XDR *, uname*);
 extern  bool_t xdr_hoststr (XDR *, hoststr*);
+extern  bool_t xdr_msg_type_t (XDR *, msg_type_t*);
 extern  bool_t xdr_cname (XDR *, cname*);
 extern  bool_t xdr_cname (XDR *, cname*);
 extern  bool_t xdr_clist (XDR *, clist*);
@@ -96,6 +112,7 @@ extern  bool_t xdr_msg_recv (XDR *, msg_recv*);
 extern bool_t xdr_msg_send ();
 extern bool_t xdr_uname ();
 extern bool_t xdr_hoststr ();
+extern bool_t xdr_msg_type_t ();
 extern bool_t xdr_cname ();
 extern bool_t xdr_cname ();
 extern bool_t xdr_clist ();

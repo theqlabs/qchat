@@ -12,6 +12,7 @@ const MAX_IP_LEN =  32;		    /* 4 Bytes  */
 typedef string msg_send<MAX_MSG_LEN>;
 typedef string uname<MAX_USR_LEN>;
 typedef string hoststr<MAX_IP_LEN>;
+enum msg_type_t {TEXT = 0, NEWUSER = 1, USEREXIT = 2, ELECTION = 3};
 
 struct cname {
     uname userName;
@@ -30,6 +31,7 @@ struct msg_recv {
     msg_send msg_sent;
     uname user_sent;
     int seq_num;
+    msg_type_t msg_type;
 };
 
 program QCHAT {
@@ -38,5 +40,6 @@ program QCHAT {
         int SEND(msg_recv) = 2;
         int EXIT(msg_recv) = 3;
         unsigned int HEARTBEAT(unsigned int) = 4;
+        void SHUTDOWNSERV() = 5;
     } = 1;
 } = 0x20000001;

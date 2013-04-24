@@ -63,7 +63,6 @@ void* messageHandler(void* inputclist) {
         pthread_exit(NULL);
     }
 
-  clist* clientlist = (clist*) inputclist;
   if(inputclist == NULL) {
     printf("Socket listener received an empty clientlist. Exiting...\n");
     pthread_exit(NULL);
@@ -99,7 +98,7 @@ void* messageHandler(void* inputclist) {
     pthread_exit(NULL);
   }
   printf("Server socket ok\n");
-
+  
   //Receive messages and do stuff with them
   if(socketadd != NULL) {
     free(socketadd);
@@ -123,8 +122,8 @@ void* electionHandler() {
       // Lenin is dead. Call an election.
       holdElection();
     }
-  printf("%d\n", hbIndex);
-  sleep(HEARTBEAT_DELAY);
+    printf("%d\n", hbIndex);
+    sleep(HEARTBEAT_DELAY);
   }
 
   pthread_exit(NULL);
@@ -134,7 +133,7 @@ int init_client(char* host) {
 
   // If clnt handle already exists, destroy:
   if (clnt != NULL) {
-    clnt_destroy( clnt );
+    clnt_destroy(clnt);
   }
   clnt = clnt_create((char*)host, QCHAT, QCHATVERS, "udp");
 
@@ -144,11 +143,17 @@ int init_client(char* host) {
     fprintf(stderr, "Could not create a client handle on %s\n", host);
     return 1;
   }
-return 0;
+  return 0;
 }
 
 // SUPER MAIN FUNCTION GO:
 int main(int argc, char * argv[]) {
+
+  pid_t pID = fork();
+  if (pID == 0) {
+    execlp("./qchat_svc", NULL, (char *) 0);
+  }
+
 
   // Join Variables:
   clist  *result_join;
@@ -251,7 +256,7 @@ int main(int argc, char * argv[]) {
   // The code that mimics chat functionality by replaying inputmsg
   char* inputmsg = (char*) malloc(sizeof(char) * MAX_MSG_LEN);
   if (inputmsg == NULL) {
-
+    return 1;
   }
   while (read(0, inputmsg, MAX_MSG_LEN) > 0) {
       inputmsg[MAX_MSG_LEN-1]='\0';
@@ -260,8 +265,11 @@ int main(int argc, char * argv[]) {
       msg_recv msg;
       msg.msg_sent = (msg_send) strdup(inputmsg);
       msg.user_sent = userdata.userName;
+      msg.msg_type = TEXT;
       int* result_send = send_1(&msg, clnt);
-      puts(msg.msg_sent);
+      if (result_send == NULL) {
+        clnt_perror(clnt, "RPC request to join chat failed:");
+      }
       if (msg.msg_sent != NULL) {
         free (msg.msg_sent);
       }
@@ -269,22 +277,23 @@ int main(int argc, char * argv[]) {
         free(inputmsg);
       }
       inputmsg = (char*) malloc(sizeof(char) * MAX_MSG_LEN);
-      if (result_send == NULL) {
-        clnt_perror(clnt, "RPC request to join chat failed:");
-      }
   }
 
   pthread_attr_destroy(&attr);
   pthread_kill(handlerThread, SIGTERM);
   pthread_kill(electionThread, SIGTERM);
 
+  //Terminate RPC process
+  if(clnt != NULL) {
+    shutdownserv_1(NULL, clnt);  
+    clnt_destroy(clnt);
+  }
 
   // Cleaning up memory!
   if(localHostname != NULL) {
     free(localHostname);
   }
   return 0;
-
 }
 
 // Automatic local IP address discovery
@@ -309,7 +318,7 @@ void getLocalIp(char* buf) {
     free(socketadd);
   }
 
-  if (sock == -1) {
+  if (err < 0 || sock == -1) {
     printf("Error discovering local IP address. Exiting...\n");
     return;
   }
@@ -330,13 +339,7 @@ void getLocalIp(char* buf) {
 
 void print_client_list(clist * client_list) {
 
-  // Passes in clist type (ptr to cnames)
-  // struct cname {uname userName, hoststr hostname
-  // int lport, int leader_flag}
 
-  // EX: Matt 192.168.5.2:7432 (Leader)
-
-  //int numClients = sizeof(*clientlist)/sizeof(cname), i;
   int numClients = client_list->clientlist.clientlist_len, i;
 
   /*
@@ -346,20 +349,18 @@ void print_client_list(clist * client_list) {
   */
 
   for (i=0 ; i < numClients; i++) {
-    printf("%s %s:%d", client_list->clientlist.clientlist_val[i].userName, 
+    printf("%s %s:%d", client_list->clientlist.clientlist_val[i].userName,
                        client_list->clientlist.clientlist_val[i].hostname,
                        client_list->clientlist.clientlist_val[i].lport);
 
-    if (client_list->clientlist.clientlist_val[i].leader_flag = 1) {
-      printf(" (Leader)\n");
+    if (client_list->clientlist.clientlist_val[i].leader_flag == 1) {
+      printf(" (Leader)");
     }
-  }
-
+     printf("\n");
+   }
 }
 
 void holdElection() {
   //Elect a new despot
 }
-
-
 

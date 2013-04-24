@@ -36,6 +36,16 @@ xdr_hoststr (XDR *xdrs, hoststr *objp)
 }
 
 bool_t
+xdr_msg_type_t (XDR *xdrs, msg_type_t *objp)
+{
+	register int32_t *buf;
+
+	 if (!xdr_enum (xdrs, (enum_t *) objp))
+		 return FALSE;
+	return TRUE;
+}
+
+bool_t
 xdr_cname (XDR *xdrs, cname *objp)
 {
 	register int32_t *buf;
@@ -72,6 +82,8 @@ xdr_msg_recv (XDR *xdrs, msg_recv *objp)
 	 if (!xdr_uname (xdrs, &objp->user_sent))
 		 return FALSE;
 	 if (!xdr_int (xdrs, &objp->seq_num))
+		 return FALSE;
+	 if (!xdr_msg_type_t (xdrs, &objp->msg_type))
 		 return FALSE;
 	return TRUE;
 }
