@@ -23,6 +23,7 @@
 
 #include "qchat.h"
 
+/*
 // Function Declarations
 void print_client_list(clientlist *);
 void getLocalIp(char*);
@@ -62,28 +63,46 @@ void* messageHandler(void* inputclist) {
   return (void *)1;
 
 }
+*/
 
 int main(int argc, char * argv[]) {
 
+  // Initialize All Variables and Data Structures:
   CLIENT *clnt;
   int isSequencer = 0;
+  char *host;
+  char *usr;
 
+  // Join Variables:
   clist  *result_join;
   cname  userdata;
 
-  // statically assigning for DEBUG reasons:
-  userdata.userName = (uname) "theqlabs";       // obtain from argv[1]
-  userdata.hostname = (ip_port) "localhost";    // obtain from getLocalIp()
+  // Program Arguments:
+  usr = argv[1];
+  host = argv[2];
+
+  // Statically assigning for DEBUG reasons:
+  userdata.userName = (uname) argv[1];          // obtain from argv[1]
+  userdata.hostname = (ip_port) argv[2];        // obtain from getLocalIp()
   userdata.leader_flag = 0;                     // obtain from int isSequencer
 
-  int  *result_send;
+  // Send Variables:
+  int *result_send;
   msg_send  arg_send;
 
-  int  *result_exit;
+  // Exit Variables: 
+  int *result_exit;
   msg_send  arg_exit;
 
-  int  *result_heartbeat;
-  int  arg_heartbeat;
+  // Heartbeat Variables:
+  int *result_heartbeat;
+  int arg_heartbeat;
+
+  // Usage:
+  if (argc > 3 || argc < 2) {
+    printf("Usage ./dchat nickname [host server IP:PORT]\n");
+    return 1;
+  }
 
   clnt = clnt_create(host, QCHAT, QCHATVERS, "udp");
   if (clnt == NULL) {
@@ -92,25 +111,26 @@ int main(int argc, char * argv[]) {
   }
   
   result_join = join_1(&userdata, clnt);
-  if (result_1 == NULL) {
+  if (result_join == NULL) {
     clnt_perror(clnt, "call failed:");
   }
 
-  printf("clientlist_len: %d\n", result_join->clientlist.clientlist_len);
-  printf("clientlist_val: %s\n", result_join->clientlist.clientlist_val);
+  printf("userName: %s\n", result_join->clientlist.clientlist_val->userName);
+  printf("hostname: %s\n", result_join->clientlist.clientlist_val->hostname);
+  printf("leader_flag: %d\n", result_join->clientlist.clientlist_val->leader_flag);
 
   result_send = send_1(&arg_send, clnt);
-  if (result_2 == NULL) {
+  if (result_send == NULL) {
     clnt_perror(clnt, "call failed:");
   }
 
   result_exit = exit_1(&arg_exit, clnt);
-  if (result_3 == NULL) {
+  if (result_exit == NULL) {
     clnt_perror(clnt, "call failed:");
   }
-
+  
   result_heartbeat = heartbeat_1(&arg_heartbeat, clnt);
-  if (result_4 == NULL) {
+  if (result_heartbeat == NULL) {
     clnt_perror(clnt, "call failed:");
   }
 
@@ -121,15 +141,6 @@ int main(int argc, char * argv[]) {
 
   if (localHostname == NULL) {
     printf("Chat localHostname memory allocation failed. Exiting...\n");
-    return 1;
-  }
-  */
-
-  // Why are we allowing for 2 arguments? Isn't a hostname required?
-  //if (argc > 3 || argc < 2) {
-  /*
-  if (argc != 3) {
-    printf("Usage ./dchat nickname [host server IP:PORT]\n");
     return 1;
   }
   */
@@ -263,6 +274,7 @@ int main(int argc, char * argv[]) {
   */
 
 }
+/*
 
 // An absolutely ridiculous way to get a local IP address
 void getLocalIp(char* buf) {
@@ -318,4 +330,5 @@ void print_client_list(clientlist * clist) {
   }
 }
 
+*/
 
