@@ -80,6 +80,11 @@ void* messageHandler(void* inputclist) {
 
   int sockid;
   if((sockid = socket(PF_INET, SOCK_DGRAM, 0)) <0) {
+    // TODO:
+    // I think this should have code to indicate when there is a chat active
+    // on a port, it lets the user know
+    // Also, we're using static LPORT values, so we're hitting this any
+    // time we create a new chat twice in the same server instance.
     perror("Error creating listening UDP socket");
     pthread_exit(NULL);
   }
@@ -231,9 +236,9 @@ int main(int argc, char * argv[]) {
 
 
   // DEBUG PRINTS:
-  printf("userName: %s\n", result_join->clientlist.clientlist_val->userName);
-  printf("hostname: %s\n", result_join->clientlist.clientlist_val->hostname);
-  printf("lport: %d\n", result_join->clientlist.clientlist_val->lport);
+  //printf("userName: %s\n", result_join->clientlist.clientlist_val->userName);
+  //printf("hostname: %s\n", result_join->clientlist.clientlist_val->hostname);
+  //printf("lport: %d\n", result_join->clientlist.clientlist_val->lport);
 
   // Message handling thread
   pthread_t handlerThread;
