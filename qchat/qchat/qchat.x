@@ -35,8 +35,8 @@ struct msg_recv {
 program QCHAT {
     version QCHATVERS {
         clist JOIN(cname) = 1;
-        int SEND(msg_send) = 2;
-        int EXIT(msg_send) = 3;
-        int HEARTBEAT(unsigned int) = 4;
+        int SEND(msg_recv) = 2;
+        int EXIT(msg_recv) = 3;
+        unsigned int HEARTBEAT(unsigned int) = 4;
     } = 1;
 } = 0x20000001;

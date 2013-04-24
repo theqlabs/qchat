@@ -110,14 +110,14 @@ void* electionHandler() {
       pthread_exit(NULL);
    }
 
-  int hbIndex = 0;
+  uint32_t hbIndex = 0;
   while (hbIndex >= 0) {
-    int64_t * result = heartbeat_1(&hbIndex, clnt);
+    uint32_t * result = heartbeat_1(&hbIndex, clnt);
     hbIndex ++;
-  if(result == NULL) {
-    // Lenin is dead. Call an election.
-    holdElection();
-  }
+    if(result == NULL) {
+      // Lenin is dead. Call an election.
+      holdElection();
+    }
   printf("%d\n", hbIndex);
   sleep(HEARTBEAT_DELAY);
   }
@@ -125,7 +125,7 @@ void* electionHandler() {
   pthread_exit(NULL);
 }
 
-void* init_client(char* host) {
+int init_client(char* host) {
 
   // If clnt handle already exists, destroy:
   if (clnt != NULL) {
@@ -137,9 +137,9 @@ void* init_client(char* host) {
   if (clnt == NULL) {
     clnt_pcreateerror((char*)host);
     fprintf(stderr, "Could not create a client handle on %s\n", host);
-    exit(1);
+    return 1;
   }
-
+return 0;
 }
 
 // SUPER MAIN FUNCTION GO:
@@ -257,9 +257,9 @@ int main(int argc, char * argv[]) {
       inputmsg[strlen(inputmsg)] = '\0';
       //puts(inputmsg);
       msg_recv msg;
-      msg.msg_sent = (msg_send) strdup(&inputmsg);
+      msg.msg_sent = (msg_send) strdup(inputmsg);
       msg.user_sent = userdata.userName;
-      //int* result_send = send_1(&msg, clnt);
+      int* result_send = send_1(&msg, clnt);
       puts(msg.msg_sent);
       if (msg.msg_sent != NULL) {
         free (msg.msg_sent);
