@@ -51,7 +51,7 @@ int msgCompare(const void* m1, const void* m2) {
 }
 
 static void sig_handler(int signal) {
-  if(signal = SIGTERM) {
+  if(signal == SIGTERM) {
     pthread_exit(NULL);
   }
 }
@@ -70,15 +70,13 @@ void* messageHandler(void* inputclist) {
 
   printf("Succeeded, current users:\n");
   print_client_list(inputclist);
-<<<<<<< HEAD
-=======
 
   queue = hq_init(msgCompare, 64);
   if (queue == NULL) {
     printf("Error initializing message handling queue. Exiting...\n");
     pthread_exit(NULL);
   }
->>>>>>> origin/master
+
   int sockid;
   if((sockid = socket(PF_INET, SOCK_DGRAM, 0)) <0) {
     perror("Error creating listening UDP socket");
@@ -219,11 +217,7 @@ int main(int argc, char * argv[]) {
   }
 
   userdata.userName = (uname) argv[1];
-<<<<<<< HEAD
-  userdata.hostname = localHostname;
-=======
-  userdata.hostname =  localHostname;
->>>>>>> origin/master
+  userdata.hostname = (hoststr) localHostname;
   userdata.lport = LOCALPORT;
   userdata.leader_flag = isSequencer;
 

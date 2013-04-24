@@ -20,7 +20,6 @@
 #define SIG_PF void(*)(int)
 #endif
 
-#define DEBUG
 
 #ifdef DEBUG
 #define RPC_SVC_FG
