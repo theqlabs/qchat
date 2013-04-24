@@ -105,11 +105,13 @@ clist *join_1_svc(cname *userdata, struct svc_req *rqstp) {
 	}
 	
 	// Copy userdata into clist (using mem addrs.):
-	//memcpy(&(clients->clientlist.clientlist_val[clients->clientlist.clientlist_len].userName), userdata->userName, strlen((char*)userdata->userName));
-//memcpy(&(clients->clientlist.clientlist_val[clients->clientlist.clientlist_len].hostname), userdata->hostname, strlen((char*)userdata->hostname));
-  //clients->clientlist.clientlist_val[clients->clientlist.clientlist_len].lport = userdata->lport;
-  //clients->clientlist.clientlist_val[clients->clientlist.clientlist_len].leader_flag = userdata->leader_flag;
-  memcpy(&(clients->clientlist.clientlist_val[clients->clientlist.clientlist_len]), userdata, sizeof(cname));
+  clients->clientlist.clientlist_val[clients->clientlist.clientlist_len].userName = (uname) strdup(userdata->userName);
+  clients->clientlist.clientlist_val[clients->clientlist.clientlist_len].hostname = (hoststr) strdup(userdata->hostname);
+	//memcpy(&(clients->clientlist.clientlist_val[clients->clientlist.clientlist_len].userName), &(userdata->userName), strlen((char*)userdata->userName));
+//memcpy(&(clients->clientlist.clientlist_val[clients->clientlist.clientlist_len].hostname), &(userdata->hostname), strlen((char*)userdata->hostname));
+  clients->clientlist.clientlist_val[clients->clientlist.clientlist_len].lport = userdata->lport;
+  clients->clientlist.clientlist_val[clients->clientlist.clientlist_len].leader_flag = userdata->leader_flag;
+  //memcpy(&(clients->clientlist.clientlist_val[clients->clientlist.clientlist_len]), userdata, sizeof(cname));
   
 	clients->clientlist.clientlist_len++;
 
@@ -165,6 +167,7 @@ int *send_1_svc(msg_recv *argp, struct svc_req *rqstp) {
 		init_data_structures();
 	}
 
+  multicast_message(argp);
 	return(&result);
 }
 

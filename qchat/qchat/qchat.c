@@ -97,24 +97,28 @@ void* messageHandler(void* inputclist) {
     perror("Error binding to listening UDP socket");
     pthread_exit(NULL);
   }
-  //printf("Server socket ok\n");
+  printf("Server socket ok\n");
+/*
+  while(1) {
    int incoming_sockid;
    listen(sockid, 5);
-   incoming_sockid = accept(sockid, NULL, NULL);
+   incoming_sockid = accept(sockid, NULL, 0);
 
    msg_recv* received = (msg_recv*) malloc(sizeof(msg_recv));
    if(received == NULL) {
     perror("Error allocating memory for incoming message");
     pthread_exit(NULL);
   }
-
+  if(incoming_sockid > 0) {
   read(incoming_sockid, &(received->msg_sent), MAX_MSG_LEN);
   read(incoming_sockid, &(received->user_sent), MAX_USR_LEN);
   read(incoming_sockid, &(received->seq_num), sizeof(unsigned int));
   read(incoming_sockid, &(received->msg_type), sizeof(msg_type_t));
-   
+  close(incoming_sockid);
   hq_push(queue, received);
-
+  }
+  }
+*/
   //Receive messages and do stuff with them
   if(socketadd != NULL) {
     free(socketadd);
@@ -165,10 +169,10 @@ int init_client(char* host) {
 // SUPER MAIN FUNCTION GO:
 int main(int argc, char * argv[]) {
 
-  pid_t pID = fork();
-  if (pID == 0) {
-    execlp("./qchat_svc", NULL, (char *) 0);
-  }
+  //pid_t pID = fork();
+  //if (pID == 0) {
+   // execlp("./qchat_svc", NULL, (char *) 0);
+ // }
 
 
   // Join Variables:
@@ -214,7 +218,7 @@ int main(int argc, char * argv[]) {
   if (argc == 3) {
     //Joining an existing chat
     char *remoteHostname = argv[2];
-    printf("%s joining an existing chat on %s, listening on %s:%d\n", argv[1], remoteHostname, localHostname, LOCALPORT);
+    printf("%s joining an existing chat on %s, listening on %s:%d\n", argv[1], remoteHostname, localHostname, LOCALRPCPORT);
     // create client handle, check health:
     int isClientAlive = init_client(localHostname);
     if (isClientAlive == 1) {
@@ -258,19 +262,19 @@ int main(int argc, char * argv[]) {
   //printf("lport: %d\n", result_join->clientlist.clientlist_val->lport);
 
   // Message handling thread
-  pthread_t handlerThread;
-  pthread_attr_t attr;
-  pthread_attr_init(&attr);
-  pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
-  pthread_create(&handlerThread, &attr, messageHandler, (void*)result_join);
+  //pthread_t handlerThread;
+  //pthread_attr_t attr;
+  //pthread_attr_init(&attr);
+  //pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
+  //pthread_create(&handlerThread, &attr, messageHandler, (void*)result_join);
 
   // Message handling thread
-  pthread_t electionThread;
-  pthread_create(&electionThread, &attr, electionHandler, NULL);
+  //pthread_t electionThread;
+  //pthread_create(&electionThread, &attr, electionHandler, NULL);
 
 
   // The code that mimics chat functionality by replaying inputmsg
-  char* inputmsg = (char*) malloc(sizeof(char) * MAX_MSG_LEN);
+  char* inputmsg = (char*) calloc(MAX_MSG_LEN, sizeof(char));
   if (inputmsg == NULL) {
     return 1;
   }
@@ -292,12 +296,12 @@ int main(int argc, char * argv[]) {
       if (inputmsg != NULL) {
         free(inputmsg);
       }
-      inputmsg = (char*) malloc(sizeof(char) * MAX_MSG_LEN);
+      inputmsg = (char*) calloc(MAX_MSG_LEN, sizeof(char));
   }
 
-  pthread_attr_destroy(&attr);
-  pthread_kill(handlerThread, SIGTERM);
-  pthread_kill(electionThread, SIGTERM);
+  //pthread_attr_destroy(&attr);
+  //pthread_kill(handlerThread, SIGTERM);
+  //pthread_kill(electionThread, SIGTERM);
 
   //Terminate RPC process
   if(clnt != NULL) {
@@ -351,6 +355,7 @@ void getLocalIp(char* buf) {
     printf("Error discovering local IP address. Exiting...\n");
     return;
     }
+  close(sock);
 }
 
 void print_client_list(clist * client_list) {
