@@ -33,6 +33,7 @@ void holdElection();
 
 // Constants, Scope: Global
 const int LOCALPORT = 10001;
+const int LOCALRPCPORT = 11001;
 const int PORTSTRLEN = 6;
 const int HEARTBEAT_DELAY = 3000;
 int isSequencer = 0;
@@ -183,6 +184,7 @@ int main(int argc, char * argv[]) {
     argv[1][MAX_USR_LEN-1] = '\0';
   }
 
+
   //Create the RPC client objects
   if (argc == 3) {
     //Joining an existing chat
@@ -204,7 +206,7 @@ int main(int argc, char * argv[]) {
 
   } else {
     //Creating a new chat
-    printf("%s started a new chat, listening on %s:%d\n", argv[1], localHostname, LOCALPORT);
+    printf("%s started a new chat, listening on %s:%d\n", argv[1], localHostname, LOCALRPCPORT);
     isSequencer = 1;
     int isClientAlive = init_client(localHostname);
     if (isClientAlive == 1) {
@@ -214,16 +216,19 @@ int main(int argc, char * argv[]) {
     }
   }
 
+
   userdata.userName = (uname) argv[1];
   userdata.hostname = (hoststr) localHostname;
-  userdata.lport = LOCALPORT;
+  userdata.lport = LOCALRPCPORT;
   userdata.leader_flag = isSequencer;
 
   // Call to join_1:
+
   result_join = join_1(&userdata, clnt);
   if (result_join == NULL) {
     clnt_perror(clnt, "RPC request to join chat failed:");
   }
+
 
   // DEBUG PRINTS:
   printf("userName: %s\n", result_join->clientlist.clientlist_val->userName);
@@ -243,27 +248,36 @@ int main(int argc, char * argv[]) {
 
 
   // The code that mimics chat functionality by replaying inputmsg
-  char inputmsg[MAX_MSG_LEN];
+  char* inputmsg = (char*) malloc(sizeof(char) * MAX_MSG_LEN);
+  if (inputmsg == NULL) {
+
+  }
   while (read(0, inputmsg, MAX_MSG_LEN) > 0) {
       inputmsg[MAX_MSG_LEN-1]='\0';
-      inputmsg[strlen(inputmsg)-1] = '\0';
-      puts(inputmsg);
+      inputmsg[strlen(inputmsg)] = '\0';
+      //puts(inputmsg);
       msg_recv msg;
       msg.msg_sent = (msg_send) strdup(&inputmsg);
-      msg.uname = userdata.userName;
-      int* result_send = send_1(&msg);
-
+      msg.user_sent = userdata.userName;
+      //int* result_send = send_1(&msg, clnt);
+      puts(msg.msg_sent);
       if (msg.msg_sent != NULL) {
         free (msg.msg_sent);
       }
+      if (inputmsg != NULL) {
+        free(inputmsg);
+      }
+      inputmsg = (char*) malloc(sizeof(char) * MAX_MSG_LEN);
       if (result_send == NULL) {
         clnt_perror(clnt, "RPC request to join chat failed:");
       }
   }
 
+
   pthread_attr_destroy(&attr);
   pthread_kill(handlerThread, SIGTERM);
   pthread_kill(electionThread, SIGTERM);
+
 
   // Cleaning up memory!
   if(localHostname != NULL) {
