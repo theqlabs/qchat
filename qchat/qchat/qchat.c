@@ -363,12 +363,6 @@ void print_client_list(clist * client_list) {
 
   int numClients = client_list->clientlist.clientlist_len, i;
 
-  /*
-  printf("%s %s:%d\n", client_list->clientlist.clientlist_val->userName,
-                     client_list->clientlist.clientlist_val->hostname,
-                     client_list->clientlist.clientlist_val->lport);
-  */
-
   for (i=0 ; i < numClients; i++) {
     printf("%s %s:%d", client_list->clientlist.clientlist_val[i].userName,
                        client_list->clientlist.clientlist_val[i].hostname,
