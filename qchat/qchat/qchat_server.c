@@ -18,7 +18,7 @@
 #include "qchat.h"
 
 #define INITIAL_CLIENT_COUNT 8
-#define MSG_BUF_SIZE 128
+#define MSG_BUF_SIZE 256
 
 // Global pointer to clist, ptr needed bc of unknown size
 clist *clients;
@@ -169,28 +169,32 @@ int *send_1_svc(msg_recv *message, struct svc_req *rqstp) {
 	static int result = 0;
 	int i;
 
-	// Knock up seq_num by 1:
-	seq_num = seq_num + 1;
-
+	// TODO:
+	// MOVE TO init_data_structures
+	// ADD free() to destroy procedure
 	// Allocate 128 message buffer:
 	// sizeof(msg_recv) is 18 BYTES
 	msg_buffer = malloc(sizeof(msg_recv)*MSG_BUF_SIZE);
+	if (msg_buffer[seq_num%MSG_BUF_SIZE].msg_sent != NULL) {
+		free(msg_buffer[seq_num%MSG_BUF_SIZE].msg_sent);
+	}
 
 	// Move message into msg_buffer
-	for (i=0; i < seq_num; i++) {
 		printf("before: %d\n", seq_num);
-		msg_buffer[i].msg_sent = (msg_send) strdup(message->msg_sent);
+		msg_buffer[seq_num%MSG_BUF_SIZE].msg_sent = (msg_send) strdup(message->msg_sent);
 		msg_buffer[i].user_sent = (uname) strdup(message->user_sent);
-		//msg_buffer[i].seq_num = (int) strdup(message->seq_num);
-		//msg_buffer[i].msg_type = (msg_type_t) strdup(message->msg_type);
+		msg_buffer[i].seq_num = (int) strdup(message->seq_num);
+		msg_buffer[i].msg_type = (msg_type_t) strdup(message->msg_type);
 		printf("after: %d\n", seq_num);
-	}
 
 	for (i=0; i < seq_num; i++) {
 		printf("before: %d\n", seq_num);
 		printf("[%s:%s:%d]", msg_buffer->msg_sent, msg_buffer->user_sent, seq_num);
 		printf("after: %d\n", seq_num);
 	}
+
+	// Knock up seq_num by 1:
+	seq_num = seq_num + 1;
 
 	// Add msg_recv message into buffer:
 
