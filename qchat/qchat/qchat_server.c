@@ -105,11 +105,11 @@ clist *join_1_svc(cname *userdata, struct svc_req *rqstp) {
 	}
 	
 	// Copy userdata into clist (using mem addrs.):
-	memcpy(&(clients->clientlist.clientlist_val[clients->clientlist.clientlist_len].userName), userdata->userName, strlen((char*)userdata->userName));
-memcpy(&(clients->clientlist.clientlist_val[clients->clientlist.clientlist_len].hostname), userdata->hostname, strlen((char*)userdata->hostname));
-  (clients->clientlist.clientlist_val[clients->clientlist.clientlist_len]).lport = userdata.lport;
-  (clients->clientlist.clientlist_val[clients->clientlist.clientlist_len]).leader_flag = userdata.leader_flag;
-  //memcpy(&(clients->clientlist.clientlist_val[clients->clientlist.clientlist_len]), userdata, strlen((char*)cname));
+	//memcpy(&(clients->clientlist.clientlist_val[clients->clientlist.clientlist_len].userName), userdata->userName, strlen((char*)userdata->userName));
+//memcpy(&(clients->clientlist.clientlist_val[clients->clientlist.clientlist_len].hostname), userdata->hostname, strlen((char*)userdata->hostname));
+  //clients->clientlist.clientlist_val[clients->clientlist.clientlist_len].lport = userdata->lport;
+  //clients->clientlist.clientlist_val[clients->clientlist.clientlist_len].leader_flag = userdata->leader_flag;
+  memcpy(&(clients->clientlist.clientlist_val[clients->clientlist.clientlist_len]), userdata, sizeof(cname));
   
 	clients->clientlist.clientlist_len++;
 
@@ -145,7 +145,7 @@ memcpy(&(clients->clientlist.clientlist_val[clients->clientlist.clientlist_len].
      */
 
     // This is a temporary fix.
-    initialized = FALSE;
+    //initialized = FALSE;
 
 	return(clients);
 }
@@ -168,6 +168,11 @@ int *send_1_svc(msg_recv *argp, struct svc_req *rqstp) {
 	return(&result);
 }
 
+msg_recv *redeliver_1_svc(u_int * seq_num, struct svc_req *rqstp) {
+
+  return NULL;
+}
+
 int *exit_1_svc(msg_recv *argp, struct svc_req *rqstp) {
 
 	// takes in string msg_send from client
@@ -188,14 +193,11 @@ int *exit_1_svc(msg_recv *argp, struct svc_req *rqstp) {
 }
 
 uint32_t *heartbeat_1_svc(uint32_t *argp, struct svc_req *rqstp) {
-
 	static uint32_t result = 0;
-
 	if (!initialized) {
 		init_data_structures();
 	}
 	result = *argp ++;
-
 	return((&result));
 }
 

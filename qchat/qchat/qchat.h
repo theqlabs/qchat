@@ -51,7 +51,7 @@ typedef struct clist clist;
 struct msg_recv {
 	msg_send msg_sent;
 	uname user_sent;
-	int seq_num;
+	u_int seq_num;
 	msg_type_t msg_type;
 };
 typedef struct msg_recv msg_recv;
@@ -69,10 +69,13 @@ extern  int * send_1_svc(msg_recv *, struct svc_req *);
 #define EXIT 3
 extern  int * exit_1(msg_recv *, CLIENT *);
 extern  int * exit_1_svc(msg_recv *, struct svc_req *);
-#define HEARTBEAT 4
+#define REDELIVER 4
+extern  msg_recv * redeliver_1(u_int *, CLIENT *);
+extern  msg_recv * redeliver_1_svc(u_int *, struct svc_req *);
+#define HEARTBEAT 5
 extern  u_int * heartbeat_1(u_int *, CLIENT *);
 extern  u_int * heartbeat_1_svc(u_int *, struct svc_req *);
-#define SHUTDOWNSERV 5
+#define SHUTDOWNSERV 6
 extern  void * shutdownserv_1(void *, CLIENT *);
 extern  void * shutdownserv_1_svc(void *, struct svc_req *);
 extern int qchat_1_freeresult (SVCXPRT *, xdrproc_t, caddr_t);
@@ -87,10 +90,13 @@ extern  int * send_1_svc();
 #define EXIT 3
 extern  int * exit_1();
 extern  int * exit_1_svc();
-#define HEARTBEAT 4
+#define REDELIVER 4
+extern  msg_recv * redeliver_1();
+extern  msg_recv * redeliver_1_svc();
+#define HEARTBEAT 5
 extern  u_int * heartbeat_1();
 extern  u_int * heartbeat_1_svc();
-#define SHUTDOWNSERV 5
+#define SHUTDOWNSERV 6
 extern  void * shutdownserv_1();
 extern  void * shutdownserv_1_svc();
 extern int qchat_1_freeresult ();

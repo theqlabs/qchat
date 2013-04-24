@@ -81,7 +81,7 @@ xdr_msg_recv (XDR *xdrs, msg_recv *objp)
 		 return FALSE;
 	 if (!xdr_uname (xdrs, &objp->user_sent))
 		 return FALSE;
-	 if (!xdr_int (xdrs, &objp->seq_num))
+	 if (!xdr_u_int (xdrs, &objp->seq_num))
 		 return FALSE;
 	 if (!xdr_msg_type_t (xdrs, &objp->msg_type))
 		 return FALSE;

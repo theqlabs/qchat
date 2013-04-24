@@ -23,6 +23,7 @@ qchat_1(struct svc_req *rqstp, register SVCXPRT *transp)
 		cname join_1_arg;
 		msg_recv send_1_arg;
 		msg_recv exit_1_arg;
+		u_int redeliver_1_arg;
 		u_int heartbeat_1_arg;
 	} argument;
 	char *result;
@@ -50,6 +51,12 @@ qchat_1(struct svc_req *rqstp, register SVCXPRT *transp)
 		_xdr_argument = (xdrproc_t) xdr_msg_recv;
 		_xdr_result = (xdrproc_t) xdr_int;
 		local = (char *(*)(char *, struct svc_req *)) exit_1_svc;
+		break;
+
+	case REDELIVER:
+		_xdr_argument = (xdrproc_t) xdr_u_int;
+		_xdr_result = (xdrproc_t) xdr_msg_recv;
+		local = (char *(*)(char *, struct svc_req *)) redeliver_1_svc;
 		break;
 
 	case HEARTBEAT:

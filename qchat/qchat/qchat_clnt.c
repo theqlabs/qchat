@@ -54,6 +54,21 @@ exit_1(msg_recv *argp, CLIENT *clnt)
 	return (&clnt_res);
 }
 
+msg_recv *
+redeliver_1(u_int *argp, CLIENT *clnt)
+{
+	static msg_recv clnt_res;
+
+	memset((char *)&clnt_res, 0, sizeof(clnt_res));
+	if (clnt_call (clnt, REDELIVER,
+		(xdrproc_t) xdr_u_int, (caddr_t) argp,
+		(xdrproc_t) xdr_msg_recv, (caddr_t) &clnt_res,
+		TIMEOUT) != RPC_SUCCESS) {
+		return (NULL);
+	}
+	return (&clnt_res);
+}
+
 u_int *
 heartbeat_1(u_int *argp, CLIENT *clnt)
 {

@@ -30,7 +30,7 @@ struct clist {
 struct msg_recv {
     msg_send msg_sent;
     uname user_sent;
-    int seq_num;
+    unsigned int seq_num;
     msg_type_t msg_type;
 };
 
@@ -39,7 +39,8 @@ program QCHAT {
         clist JOIN(cname) = 1;
         int SEND(msg_recv) = 2;
         int EXIT(msg_recv) = 3;
-        unsigned int HEARTBEAT(unsigned int) = 4;
-        void SHUTDOWNSERV() = 5;
+        msg_recv REDELIVER(unsigned int) = 4;
+        unsigned int HEARTBEAT(unsigned int) = 5;
+        void SHUTDOWNSERV() = 6;
     } = 1;
 } = 0x20000001;

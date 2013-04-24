@@ -97,8 +97,24 @@ void* messageHandler(void* inputclist) {
     perror("Error binding to listening UDP socket");
     pthread_exit(NULL);
   }
-  printf("Server socket ok\n");
-  
+  //printf("Server socket ok\n");
+   int incoming_sockid;
+   listen(sockid, 5);
+   incoming_sockid = accept(sockid, NULL, NULL);
+
+   msg_recv* received = (msg_recv*) malloc(sizeof(msg_recv));
+   if(received == NULL) {
+    perror("Error allocating memory for incoming message");
+    pthread_exit(NULL);
+  }
+
+  read(incoming_sockid, &(received->msg_sent), MAX_MSG_LEN);
+  read(incoming_sockid, &(received->user_sent), MAX_USR_LEN);
+  read(incoming_sockid, &(received->seq_num), sizeof(unsigned int));
+  read(incoming_sockid, &(received->msg_type), sizeof(msg_type_t));
+   
+  hq_push(queue, received);
+
   //Receive messages and do stuff with them
   if(socketadd != NULL) {
     free(socketadd);
@@ -204,7 +220,7 @@ int main(int argc, char * argv[]) {
     if (isClientAlive == 1) {
       clnt_pcreateerror(localHostname);
       printf("Unable to activate a new chat on %s, try again later.\n", localHostname);
-
+      return 1;
     }
     // if connection doesn't succeed
     if (clnt == NULL) {
@@ -233,7 +249,7 @@ int main(int argc, char * argv[]) {
   // Call to join_1:
   result_join = join_1(&userdata, clnt);
   if (result_join == NULL) {
-    clnt_perror(clnt, "RPC request to join chat failed:");
+    clnt_perror(clnt, "RPC request to join chat failed");
   }
 
   // DEBUG PRINTS:
