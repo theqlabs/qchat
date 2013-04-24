@@ -18,11 +18,14 @@
 #include "qchat.h"
 
 #define INITIAL_CLIENT_COUNT 8
+#define MSG_BUF_SIZE 128
 
 // Global pointer to clist, ptr needed bc of unknown size
 clist *clients;
+msg_recv *msg_buffer;
 int32_t initialized = FALSE;
-int32_t alloc_clients_size;
+int32_t alloc_clients_size;			// Are we using this anywhere? 
+uint32_t seq_num = 0;
 
 int init_data_structures() {
 
@@ -142,46 +145,15 @@ clist *join_1_svc(cname *userdata, struct svc_req *rqstp) {
 	}
 	
 	// Copy userdata into clist (using mem addrs.):
-  clients->clientlist.clientlist_val[clients->clientlist.clientlist_len].userName = (uname) strdup(userdata->userName);
-  clients->clientlist.clientlist_val[clients->clientlist.clientlist_len].hostname = (hoststr) strdup(userdata->hostname);
-	//memcpy(&(clients->clientlist.clientlist_val[clients->clientlist.clientlist_len].userName), &(userdata->userName), strlen((char*)userdata->userName));
-//memcpy(&(clients->clientlist.clientlist_val[clients->clientlist.clientlist_len].hostname), &(userdata->hostname), strlen((char*)userdata->hostname));
-  clients->clientlist.clientlist_val[clients->clientlist.clientlist_len].lport = userdata->lport;
-  clients->clientlist.clientlist_val[clients->clientlist.clientlist_len].leader_flag = userdata->leader_flag;
-  //memcpy(&(clients->clientlist.clientlist_val[clients->clientlist.clientlist_len]), userdata, sizeof(cname));
+	clients->clientlist.clientlist_val[clients->clientlist.clientlist_len].userName = (uname) strdup(userdata->userName);
+	clients->clientlist.clientlist_val[clients->clientlist.clientlist_len].hostname = (hoststr) strdup(userdata->hostname);
+  	//memcpy(&(clients->clientlist.clientlist_val[clients->clientlist.clientlist_len].userName), &(userdata->userName), strlen((char*)userdata->userName));
+  	//memcpy(&(clients->clientlist.clientlist_val[clients->clientlist.clientlist_len].hostname), &(userdata->hostname), strlen((char*)userdata->hostname));
+  	clients->clientlist.clientlist_val[clients->clientlist.clientlist_len].lport = userdata->lport;
+  	clients->clientlist.clientlist_val[clients->clientlist.clientlist_len].leader_flag = userdata->leader_flag;
+  	//memcpy(&(clients->clientlist.clientlist_val[clients->clientlist.clientlist_len]), userdata, sizeof(cname));
   
-	clients->clientlist.clientlist_len++;
-
-	// multicast new member to each client
-	// multicast-nastiness: 
-	/*
-	 struct sockaddr_in addr;
-     int fd, cnt;
-     struct ip_mreq mreq;
-     char *message="Hello, World!";
-
-     // create what looks like an ordinary UDP socket
-     if ((fd=socket(AF_INET,SOCK_DGRAM,0)) < 0) {
-	  perror("socket");
-	  exit(1);
-     }
-
-     // set up destination address
-     memset(&addr,0,sizeof(addr));
-     addr.sin_family=AF_INET;
-     addr.sin_addr.s_addr=inet_addr(HELLO_GROUP);
-     addr.sin_port=htons(HELLO_PORT);
-     
-     // now just sendto() our destination!
-     while (1) {
-	  if (sendto(fd,message,sizeof(message),0,(struct sockaddr *) &addr,
-		     sizeof(addr)) < 0) {
-	       perror("sendto");
-	       exit(1);
-	  }
-	  sleep(1);
-     }
-     */
+  	clients->clientlist.clientlist_len++;
 
     // This is a temporary fix.
     //initialized = FALSE;
@@ -189,23 +161,48 @@ clist *join_1_svc(cname *userdata, struct svc_req *rqstp) {
 	return(clients);
 }
 
-int *send_1_svc(msg_recv *argp, struct svc_req *rqstp) {
+int *send_1_svc(msg_recv *message, struct svc_req *rqstp) {
 
-	// takes in string msg_send from client
+	// takes in struct msg_recv from client
 	// returns int (ACK) when done
+
+	static int result = 0;
+	int i;
+
+	// Knock up seq_num by 1:
+	seq_num = seq_num + 1;
+
+	// Allocate 128 message buffer:
+	// sizeof(msg_recv) is 18 BYTES
+	msg_buffer = malloc(sizeof(msg_recv)*MSG_BUF_SIZE);
+
+	// Move message into msg_buffer
+	for (i=0; i < seq_num; i++) {
+		printf("before: %d\n", seq_num);
+		msg_buffer[i].msg_sent = (msg_send) strdup(message->msg_sent);
+		msg_buffer[i].user_sent = (uname) strdup(message->user_sent);
+		//msg_buffer[i].seq_num = (int) strdup(message->seq_num);
+		//msg_buffer[i].msg_type = (msg_type_t) strdup(message->msg_type);
+		printf("after: %d\n", seq_num);
+	}
+
+	for (i=0; i < seq_num; i++) {
+		printf("before: %d\n", seq_num);
+		printf("[%s:%s:%d]", msg_buffer->msg_sent, msg_buffer->user_sent, seq_num);
+		printf("after: %d\n", seq_num);
+	}
+
+	// Add msg_recv message into buffer:
 
 	// assign seq#
 	// multicast to clients, on fail/retry:
 	// 		remove client from clist
 	//		multicast exist msg, seq# 
-	static int result = 0;
 
-	if (!initialized) {
-		init_data_structures();
-	}
+  	//multicast_message(message);
 
-  multicast_message(argp);
 	return(&result);
+
 }
 
 msg_recv *redeliver_1_svc(u_int * seq_num, struct svc_req *rqstp) {
