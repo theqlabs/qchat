@@ -8,15 +8,15 @@
 /* Default timeout can be changed using clnt_control() */
 static struct timeval TIMEOUT = { 25, 0 };
 
-clientlist *
+clist *
 join_1(argp, clnt)
 	cname *argp;
 	CLIENT *clnt;
 {
-	static clientlist clnt_res;
+	static clist clnt_res;
 
 	memset((char *)&clnt_res, 0, sizeof(clnt_res));
-	if (clnt_call(clnt, JOIN, xdr_cname, argp, xdr_clientlist, &clnt_res, TIMEOUT) != RPC_SUCCESS)
+	if (clnt_call(clnt, JOIN, xdr_cname, argp, xdr_clist, &clnt_res, TIMEOUT) != RPC_SUCCESS)
 		return (NULL);
 	return (&clnt_res);
 }

@@ -20,6 +20,8 @@
 #define SIG_PF void(*)(int)
 #endif
 
+#define DEBUG
+
 #ifdef DEBUG
 #define RPC_SVC_FG
 #endif
@@ -89,7 +91,7 @@ qchat_1(rqstp, transp)
 
 	case JOIN:
 		xdr_argument = xdr_cname;
-		xdr_result = xdr_clientlist;
+		xdr_result = xdr_clist;
 		local = (char *(*)()) join_1_svc;
 		break;
 
