@@ -3,7 +3,7 @@ CFLAGS= -g -Wall -pedantic -O0 -std=gnu99
 LDFLAGS= -pthread
 SOURCES=qchat.c qchat_clnt.c qchat_xdr.c qchat.h holdback_queue.c
 OBJECTS=$(SOURCES:.c=.o)
-EXECUTABLE=qchatgit
+EXECUTABLE=qchat
 
 all: $(SOURCES) $(EXECUTABLE)
 
