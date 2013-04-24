@@ -54,6 +54,9 @@ clist *join_1_svc(cname *userdata, struct svc_req *rqstp) {
 	memcpy(&(clients->clientlist.clientlist_val[clients->clientlist.clientlist_len]), userdata, sizeof(cname));
 	clients->clientlist.clientlist_len++;
 
+	// multicast new member to each client
+	fprintf(stderr, "userdata localport: %d", userdata->lport);
+
 	return(clients);
 }
 

@@ -28,9 +28,9 @@ xdr_uname(xdrs, objp)
 }
 
 bool_t
-xdr_ip_port(xdrs, objp)
+xdr_hoststr(xdrs, objp)
 	XDR *xdrs;
-	ip_port *objp;
+	hoststr *objp;
 {
 
 	if (!xdr_string(xdrs, objp, MAX_IP_LEN))
@@ -46,7 +46,9 @@ xdr_cname(xdrs, objp)
 
 	if (!xdr_uname(xdrs, &objp->userName))
 		return (FALSE);
-	if (!xdr_ip_port(xdrs, &objp->hostname))
+	if (!xdr_hoststr(xdrs, &objp->hostname))
+		return (FALSE);
+	if (!xdr_int(xdrs, &objp->lport))
 		return (FALSE);
 	if (!xdr_int(xdrs, &objp->leader_flag))
 		return (FALSE);

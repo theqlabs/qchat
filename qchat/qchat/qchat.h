@@ -34,19 +34,20 @@ bool_t xdr_uname();
 #endif /* Old Style C */
 
 
-typedef char *ip_port;
+typedef char *hoststr;
 #ifdef __cplusplus
-extern "C" bool_t xdr_ip_port(XDR *, ip_port*);
+extern "C" bool_t xdr_hoststr(XDR *, hoststr*);
 #elif __STDC__
-extern  bool_t xdr_ip_port(XDR *, ip_port*);
+extern  bool_t xdr_hoststr(XDR *, hoststr*);
 #else /* Old Style C */
-bool_t xdr_ip_port();
+bool_t xdr_hoststr();
 #endif /* Old Style C */
 
 
 struct cname {
 	uname userName;
-	ip_port hostname;
+	hoststr hostname;
+	int lport;
 	int leader_flag;
 };
 typedef struct cname cname;
