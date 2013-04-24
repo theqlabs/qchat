@@ -61,7 +61,6 @@ clist *join_1_svc(cname *userdata, struct svc_req *rqstp) {
 	clients->clientlist.clientlist_len++;
 
 	// multicast new member to each client
-	//fprintf(stderr, "userdata localport: %d", userdata->lport);
 	// multicast-nastiness: 
 	/*
 	 struct sockaddr_in addr;
@@ -91,6 +90,8 @@ clist *join_1_svc(cname *userdata, struct svc_req *rqstp) {
 	  sleep(1);
      }
      */
+
+    // This is a temporary fix.
     initialized = FALSE;
 
 	return(clients);
