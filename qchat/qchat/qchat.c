@@ -189,7 +189,6 @@ int main(int argc, char * argv[]) {
     argv[1][MAX_USR_LEN-1] = '\0';
   }
 
-
   //Create the RPC client objects
   if (argc == 3) {
     //Joining an existing chat
@@ -221,19 +220,16 @@ int main(int argc, char * argv[]) {
     }
   }
 
-
   userdata.userName = (uname) argv[1];
   userdata.hostname = (hoststr) localHostname;
   userdata.lport = LOCALRPCPORT;
   userdata.leader_flag = isSequencer;
 
   // Call to join_1:
-
   result_join = join_1(&userdata, clnt);
   if (result_join == NULL) {
     clnt_perror(clnt, "RPC request to join chat failed:");
   }
-
 
   // DEBUG PRINTS:
   //printf("userName: %s\n", result_join->clientlist.clientlist_val->userName);
@@ -277,7 +273,6 @@ int main(int argc, char * argv[]) {
         clnt_perror(clnt, "RPC request to join chat failed:");
       }
   }
-
 
   pthread_attr_destroy(&attr);
   pthread_kill(handlerThread, SIGTERM);
@@ -342,23 +337,23 @@ void print_client_list(clist * client_list) {
   // EX: Matt 192.168.5.2:7432 (Leader)
 
   //int numClients = sizeof(*clientlist)/sizeof(cname), i;
-  //int numClients = clientlist->clientlist.clientlist_len, i;
+  int numClients = client_list->clientlist.clientlist_len, i;
 
+  /*
   printf("%s %s:%d\n", client_list->clientlist.clientlist_val->userName,
                      client_list->clientlist.clientlist_val->hostname,
                      client_list->clientlist.clientlist_val->lport);
-
-  /*
-  for (i=0 ; i < numClients; i++) {
-    printf("%s %s:%d", ((uname)clientlist.clientlist[i]).userName, ((hoststr)clientlist.clientlist[i]).hostname,
-    clientlist.clientlist[i].lport);
-
-    if (((int)clientlist[i]).leader_flag = 1) {
-      printf("(Leader)");
-    }
-    printf("\n");
-  }
   */
+
+  for (i=0 ; i < numClients; i++) {
+    printf("%s %s:%d", client_list->clientlist.clientlist_val[i].userName, 
+                       client_list->clientlist.clientlist_val[i].hostname,
+                       client_list->clientlist.clientlist_val[i].lport);
+
+    if (client_list->clientlist.clientlist_val[i].leader_flag = 1) {
+      printf(" (Leader)\n");
+    }
+  }
 
 }
 
