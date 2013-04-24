@@ -4,6 +4,12 @@
 // this is the RPC code executed only by the sequencer
 //
 
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <time.h>
+#include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -55,7 +61,36 @@ clist *join_1_svc(cname *userdata, struct svc_req *rqstp) {
 	clients->clientlist.clientlist_len++;
 
 	// multicast new member to each client
-	fprintf(stderr, "userdata localport: %d", userdata->lport);
+	//fprintf(stderr, "userdata localport: %d", userdata->lport);
+	// multicast-nastiness: 
+	/*
+	 struct sockaddr_in addr;
+     int fd, cnt;
+     struct ip_mreq mreq;
+     char *message="Hello, World!";
+
+     // create what looks like an ordinary UDP socket
+     if ((fd=socket(AF_INET,SOCK_DGRAM,0)) < 0) {
+	  perror("socket");
+	  exit(1);
+     }
+
+     // set up destination address
+     memset(&addr,0,sizeof(addr));
+     addr.sin_family=AF_INET;
+     addr.sin_addr.s_addr=inet_addr(HELLO_GROUP);
+     addr.sin_port=htons(HELLO_PORT);
+     
+     // now just sendto() our destination!
+     while (1) {
+	  if (sendto(fd,message,sizeof(message),0,(struct sockaddr *) &addr,
+		     sizeof(addr)) < 0) {
+	       perror("sendto");
+	       exit(1);
+	  }
+	  sleep(1);
+     }
+     */
 
 	return(clients);
 }

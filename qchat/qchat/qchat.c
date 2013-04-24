@@ -57,7 +57,7 @@ void* messageHandler(void* inputclist) {
   }
 
   printf("Succeeded, current users:\n");
-  //print_client_list(clist);
+  print_client_list(inputclist);
   int sockid;
   if((sockid = socket(PF_INET, SOCK_DGRAM, 0)) <0) {
     perror("Error creating listening UDP socket");
@@ -189,7 +189,6 @@ int main(int argc, char * argv[]) {
     //Creating a new chat
     printf("%s started a new chat, listening on %s:%d\n", argv[1], localHostname, LOCALPORT);
     isSequencer = 1;
-    printf("DOES IT REACH HERE?");
     int isClientAlive = init_client(localHostname);
     if (isClientAlive == 1) {
       clnt_pcreateerror(localHostname);
@@ -198,13 +197,10 @@ int main(int argc, char * argv[]) {
     }
   }
 
-  userdata.userName = (uname) argv[1];          // obtain from argv[1]
-  userdata.hostname =  localHostname;
+  userdata.userName = (uname) argv[1];
+  userdata.hostname = localHostname;
   userdata.lport = LOCALPORT;
   userdata.leader_flag = isSequencer;
-
-  printf("username: %s", userdata.userName);
-  printf("hostname: %s", userdata.hostname);
 
   // Call to join_1:
   result_join = join_1(&userdata, clnt);
@@ -215,14 +211,14 @@ int main(int argc, char * argv[]) {
   // DEBUG PRINTS:
   printf("userName: %s\n", result_join->clientlist.clientlist_val->userName);
   printf("hostname: %s\n", result_join->clientlist.clientlist_val->hostname);
-  printf("leader_flag: %d\n", result_join->clientlist.clientlist_val->leader_flag);
+  printf("lport: %d\n", result_join->clientlist.clientlist_val->lport);
 
   // Message handling thread
   pthread_t handlerThread;
   pthread_attr_t attr;
   pthread_attr_init(&attr);
   pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
-  pthread_create(&handlerThread, &attr, messageHandler, (void*)clientlist);
+  pthread_create(&handlerThread, &attr, messageHandler, (void*)result_join);
 
   // Message handling thread
   pthread_t electionThread;
@@ -294,16 +290,33 @@ void getLocalIp(char* buf) {
     }
 }
 
-void print_client_list(clist * clientlist) {
-  int numClients = sizeof(*clientlist)/sizeof(cname), i;
-  for (i=0 ; i < numClients; i++)
-  {
-    //printf("%s %s", ((cname)clist[i]).userName, ((cname)clist[i]).hostname);
-    //if (((cname)clist[i]).leader_flag = 1) {
-    //  printf("(Leader)");
-   // }
+void print_client_list(clist * client_list) {
+
+  // Passes in clist type (ptr to cnames)
+  // struct cname {uname userName, hoststr hostname
+  // int lport, int leader_flag}
+
+  // EX: Matt 192.168.5.2:7432 (Leader)
+
+  //int numClients = sizeof(*clientlist)/sizeof(cname), i;
+  //int numClients = clientlist->clientlist.clientlist_len, i;
+
+  printf("%s %s:%d\n", client_list->clientlist.clientlist_val->userName, 
+                     client_list->clientlist.clientlist_val->hostname,
+                     client_list->clientlist.clientlist_val->lport);
+
+  /*
+  for (i=0 ; i < numClients; i++) {
+    printf("%s %s:%d", ((uname)clientlist.clientlist[i]).userName, ((hoststr)clientlist.clientlist[i]).hostname, 
+    clientlist.clientlist[i].lport);
+    
+    if (((int)clientlist[i]).leader_flag = 1) {
+      printf("(Leader)");
+    }
     printf("\n");
   }
+  */
+
 }
 
 void holdElection() {
