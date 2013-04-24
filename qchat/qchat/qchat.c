@@ -17,6 +17,7 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
+#include <netdb.h>
 #include <pthread.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -33,7 +34,6 @@ void holdElection();
 
 // Constants, Scope: Global
 const int LOCALPORT = 10001;
-const int LOCALRPCPORT = 11001;
 const int PORTSTRLEN = 6;
 const int HEARTBEAT_DELAY = 3000;
 int isSequencer = 0;
@@ -77,6 +77,17 @@ void* messageHandler(void* inputclist) {
     pthread_exit(NULL);
   }
 
+  struct addrinfo myhints;
+  struct addrinfo *myservinfo;
+  memset(&myhints, 0, sizeof (myhints));
+  myhints.ai_family = AF_INET;
+  myhints.ai_socktype = SOCK_DGRAM;
+  myhints.ai_flags = 0;
+  char * portStr = malloc(sizeof(char) * 7);
+  sprintf(portStr, "%d", LOCALPORT);
+  getaddrinfo(NULL, portStr, &myhints, &myservinfo);
+
+  
   int sockid;
   if((sockid = socket(PF_INET, SOCK_DGRAM, 0)) <0) {
     // TODO:
@@ -88,42 +99,58 @@ void* messageHandler(void* inputclist) {
     pthread_exit(NULL);
   }
 
-  struct sockaddr_in* socketadd = (struct sockaddr_in*) malloc(sizeof(struct sockaddr_in));
-  socketadd->sin_family = AF_INET;
-  socketadd->sin_port = htons(LOCALPORT);
-
-  if((bind(sockid, (struct sockaddr*)socketadd, sizeof(*socketadd)))<0) {
+  if((bind(sockid, myservinfo->ai_addr, myservinfo->ai_addrlen))<0) {
     close(sockid);
     perror("Error binding to listening UDP socket");
     pthread_exit(NULL);
   }
+  listen(sockid, 16);
+  socklen_t len = (socklen_t) sizeof(struct sockaddr_in);
+struct sockaddr_in* socketadd = (struct sockaddr_in*) malloc(sizeof(struct sockaddr_in));
+  socketadd->sin_family = AF_INET;
+  socketadd->sin_port = htons(LOCALPORT);
+  int newSock = accept(sockid, (struct sockaddr *) &socketadd, &len);
   printf("Server socket ok\n");
-/*
-  while(1) {
-   int incoming_sockid;
-   listen(sockid, 5);
-   incoming_sockid = accept(sockid, NULL, 0);
 
+  while (1) {
    msg_recv* received = (msg_recv*) malloc(sizeof(msg_recv));
+   received->msg_sent = (char *) malloc(sizeof(char*)*MAX_MSG_LEN);
+  received->user_sent = (char *) malloc(sizeof(char*)*MAX_USR_LEN);
    if(received == NULL) {
     perror("Error allocating memory for incoming message");
     pthread_exit(NULL);
+   }
+
+  recvfrom(newSock, (received->msg_sent), MAX_MSG_LEN, 0, (struct sockaddr *) socketadd,&len);
+recvfrom (newSock, (received->user_sent), MAX_USR_LEN, 0, (struct sockaddr *) socketadd,&len);
+recvfrom (newSock, (received->seq_num), sizeof(unsigned int), 0, (struct sockaddr *) socketadd, &len);
+recvfrom (newSock, &(received->msg_type), sizeof(msg_type_t), 0, (struct sockaddr *) socketadd, &len);
+
+    if (received->msg_sent != NULL) {
+    //printf("%s\n",(char*) received->msg_sent);
+}
+if (received->user_sent != NULL) {
+    //printf("%s\n",(char*) received->user_sent);
+}
+if (received->seq_num != 0) {
+   // printf("%d\n",received->seq_num);
+} 
+if (received->msg_type != 0) { 
+  //printf("%d\n",received->msg_type);
+} 
+if (received->seq_num != 0) {
+  // hq_push(queue, received);
+}
+
   }
-  if(incoming_sockid > 0) {
-  read(incoming_sockid, &(received->msg_sent), MAX_MSG_LEN);
-  read(incoming_sockid, &(received->user_sent), MAX_USR_LEN);
-  read(incoming_sockid, &(received->seq_num), sizeof(unsigned int));
-  read(incoming_sockid, &(received->msg_type), sizeof(msg_type_t));
-  close(incoming_sockid);
-  hq_push(queue, received);
-  }
-  }
-*/
+  
+
   //Receive messages and do stuff with them
   if(socketadd != NULL) {
     free(socketadd);
   }
   close(sockid);
+  freeaddrinfo(myservinfo);
   pthread_exit(NULL);
 }
 
@@ -218,7 +245,7 @@ int main(int argc, char * argv[]) {
   if (argc == 3) {
     //Joining an existing chat
     char *remoteHostname = argv[2];
-    printf("%s joining an existing chat on %s, listening on %s:%d\n", argv[1], remoteHostname, localHostname, LOCALRPCPORT);
+    printf("%s joining an existing chat on %s, listening on %s:%d\n", argv[1], remoteHostname, localHostname, LOCALPORT);
     // create client handle, check health:
     int isClientAlive = init_client(localHostname);
     if (isClientAlive == 1) {
@@ -235,7 +262,7 @@ int main(int argc, char * argv[]) {
 
   } else {
     //Creating a new chat
-    printf("%s started a new chat, listening on %s:%d\n", argv[1], localHostname, LOCALRPCPORT);
+    printf("%s started a new chat, listening on %s:%d\n", argv[1], localHostname, LOCALPORT);
     isSequencer = 1;
     int isClientAlive = init_client(localHostname);
     if (isClientAlive == 1) {
@@ -247,7 +274,7 @@ int main(int argc, char * argv[]) {
 
   userdata.userName = (uname) argv[1];
   userdata.hostname = (hoststr) localHostname;
-  userdata.lport = LOCALRPCPORT;
+  userdata.lport = LOCALPORT;
   userdata.leader_flag = isSequencer;
 
   // Call to join_1:
@@ -262,16 +289,15 @@ int main(int argc, char * argv[]) {
   //printf("lport: %d\n", result_join->clientlist.clientlist_val->lport);
 
   // Message handling thread
-  //pthread_t handlerThread;
-  //pthread_attr_t attr;
-  //pthread_attr_init(&attr);
-  //pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
-  //pthread_create(&handlerThread, &attr, messageHandler, (void*)result_join);
+  pthread_t handlerThread;
+  pthread_attr_t attr;
+  pthread_attr_init(&attr);
+  pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
+  pthread_create(&handlerThread, &attr, messageHandler, (void*)result_join);
 
-  // Message handling thread
-  //pthread_t electionThread;
-  //pthread_create(&electionThread, &attr, electionHandler, NULL);
-
+  // Election handling thread
+  pthread_t electionThread;
+  pthread_create(&electionThread, &attr, electionHandler, NULL);
 
   // The code that mimics chat functionality by replaying inputmsg
   char* inputmsg = (char*) calloc(MAX_MSG_LEN, sizeof(char));
@@ -299,9 +325,9 @@ int main(int argc, char * argv[]) {
       inputmsg = (char*) calloc(MAX_MSG_LEN, sizeof(char));
   }
 
-  //pthread_attr_destroy(&attr);
-  //pthread_kill(handlerThread, SIGTERM);
-  //pthread_kill(electionThread, SIGTERM);
+  pthread_attr_destroy(&attr);
+  pthread_kill(handlerThread, SIGTERM);
+  pthread_kill(electionThread, SIGTERM);
 
   //Terminate RPC process
   if(clnt != NULL) {
