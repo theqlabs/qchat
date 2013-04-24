@@ -113,8 +113,8 @@ extern "C" int * send_1_svc(msg_send *, struct svc_req *);
 extern "C" int * exit_1(msg_send *, CLIENT *);
 extern "C" int * exit_1_svc(msg_send *, struct svc_req *);
 #define HEARTBEAT ((rpc_uint)4)
-extern "C" int * heartbeat_1(int *, CLIENT *);
-extern "C" int * heartbeat_1_svc(int *, struct svc_req *);
+extern "C" int * heartbeat_1(u_int *, CLIENT *);
+extern "C" int * heartbeat_1_svc(u_int *, struct svc_req *);
 
 #elif __STDC__
 #define JOIN ((rpc_uint)1)
@@ -127,8 +127,8 @@ extern  int * send_1_svc(msg_send *, struct svc_req *);
 extern  int * exit_1(msg_send *, CLIENT *);
 extern  int * exit_1_svc(msg_send *, struct svc_req *);
 #define HEARTBEAT ((rpc_uint)4)
-extern  int * heartbeat_1(int *, CLIENT *);
-extern  int * heartbeat_1_svc(int *, struct svc_req *);
+extern  int * heartbeat_1(u_int *, CLIENT *);
+extern  int * heartbeat_1_svc(u_int *, struct svc_req *);
 
 #else /* Old Style C */
 #define JOIN ((rpc_uint)1)

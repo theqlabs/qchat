@@ -77,6 +77,14 @@ int *send_1_svc(msg_send *argp, struct svc_req *rqstp) {
 
 int *exit_1_svc(msg_send *argp, struct svc_req *rqstp) {
 
+	// takes in string msg_send from client
+	// returns int (ACK) when done
+
+	// assign seq#
+	// remove from clist, isLeaderCheck:
+	// 		pickNewLeader
+	//		multicast new leader
+	// multicast exist msg, seq#
 	static int result;
 
 	if (!initialized) {
@@ -86,9 +94,9 @@ int *exit_1_svc(msg_send *argp, struct svc_req *rqstp) {
 	return(&result);
 }
 
-int *heartbeat_1_svc(int64_t *argp, struct svc_req *rqstp) {
+int *heartbeat_1_svc(uint32_t *argp, struct svc_req *rqstp) {
 
-	static int64_t result = 0;
+	static uint32_t result = 0;
 
 	if (!initialized) {
 		init_data_structures();

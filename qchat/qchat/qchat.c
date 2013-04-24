@@ -25,9 +25,8 @@
 
 #include "qchat.h"
 
-/*
 // Function Declarations
-void print_client_list(clientlist *);
+void print_client_list(clist *);
 void getLocalIp(char*);
 void holdElection();
 
@@ -36,8 +35,8 @@ const int LOCALPORT = 10001;
 const int PORTSTRLEN = 6;
 const int HEARTBEAT_DELAY = 3000;
 int isSequencer = 0;
-clientlist* clist;
 CLIENT *clnt;
+clist *clientlist;
 
 static void sig_handler(int signal) {
   if(signal = SIGTERM) {
@@ -45,15 +44,13 @@ static void sig_handler(int signal) {
   }
 }
 
-//clientlist* clist;                          // Why do we need this?
-
 void* messageHandler(void* inputclist) {
   if (signal(SIGTERM, sig_handler) == SIG_ERR) {
         fputs("Error occurred setting a SIGTERM handler.\n", stderr);
         pthread_exit(NULL);
     }
 
-  clientlist* clist = (clientlist*) inputclist;
+  clist* clientlist = (clist*) inputclist;
   if(inputclist == NULL) {
     printf("Socket listener received an empty clientlist. Exiting...\n");
     pthread_exit(NULL);
@@ -86,54 +83,51 @@ void* messageHandler(void* inputclist) {
 
 void* electionHandler() {
 
-if (signal(SIGTERM, sig_handler) == SIG_ERR) {
-        fputs("Error occurred setting a SIGTERM handler.\n", stderr);
-        pthread_exit(NULL);
-    }
+  if (signal(SIGTERM, sig_handler) == SIG_ERR) {
+      fputs("Error occurred setting a SIGTERM handler.\n", stderr);
+      pthread_exit(NULL);
+   }
 
-int hbIndex = 0;
-while (hbIndex >= 0) {
-  int64_t * result = heartbeat_1(&hbIndex, clnt);
-  hbIndex ++;
+  int hbIndex = 0;
+  while (hbIndex >= 0) {
+    int64_t * result = heartbeat_1(&hbIndex, clnt);
+    hbIndex ++;
   if(result == NULL) {
     //SHIT! Lenin is dead. Call an election.
     holdElection();
   }
   printf("%d\n", hbIndex);
   sleep(HEARTBEAT_DELAY);
-}
-pthread_exit(NULL);
-}
-
-int main(int argc, char * argv[]) {
-
-  char *localHostname = (char*) malloc((size_t)INET_ADDRSTRLEN);
-
-  if (localHostname == NULL) {
-    printf("Chat localHostname memory allocation failed. Exiting...\n");
-    return 1;
   }
 
-  if (argc > 3 || argc < 2) {
-    printf("Usage ./dchat nickname [host server IP:PORT]\n");
+  pthread_exit(NULL);
+}
 
-*/
+void* init_client(char* host) {
 
+  // If clnt handle already exists, destroy:
+  if (clnt != NULL) {
+    clnt_destroy( clnt );
+  }
+
+  // Move into separate procedure, along with clnt_destroy()
+  clnt = clnt_create((char*)host, QCHAT, QCHATVERS, "udp");
+
+  // Check to see if the client handle was created
+  if (clnt == NULL) {
+    clnt_pcreateerror((char*)host);
+    fprintf(stderr, "Could not create a client handle on %s\n", host);
+    exit(1);
+  }
+
+}
+
+// SUPER MAIN FUNCTION GO:
 int main(int argc, char * argv[]) {
-
-  // Initialize All Variables and Data Structures:
-  CLIENT *clnt;
-  int isSequencer = 0;
-  char *host;
-  char *usr;
 
   // Join Variables:
   clist  *result_join;
   cname  userdata;
-
-  // Program Arguments:
-  usr = argv[1];
-  host = argv[2];
 
   // Statically assigning for DEBUG reasons:
   userdata.userName = (uname) argv[1];          // obtain from argv[1]
@@ -152,64 +146,27 @@ int main(int argc, char * argv[]) {
   int *result_heartbeat;
   int arg_heartbeat;
 
+  char *localHostname = (char*) malloc((size_t)INET_ADDRSTRLEN);
+
+  // localHost NULL check:
+  if (localHostname == NULL) {
+    printf("Chat localHostname memory allocation failed. Exiting...\n");
+    return 1;
+  }
+
   // Usage:
   if (argc > 3 || argc < 2) {
     printf("Usage ./dchat nickname [host server IP:PORT]\n");
     return 1;
   }
 
-  clnt = clnt_create(host, QCHAT, QCHATVERS, "udp");
-  if (clnt == NULL) {
-    clnt_pcreateerror(host);
-    exit(1);
-  }
-  
-  result_join = join_1(&userdata, clnt);
-  if (result_join == NULL) {
-    clnt_perror(clnt, "call failed:");
-  }
-
-  printf("userName: %s\n", result_join->clientlist.clientlist_val->userName);
-  printf("hostname: %s\n", result_join->clientlist.clientlist_val->hostname);
-  printf("leader_flag: %d\n", result_join->clientlist.clientlist_val->leader_flag);
-
-  result_send = send_1(&arg_send, clnt);
-  if (result_send == NULL) {
-    clnt_perror(clnt, "call failed:");
-  }
-
-  result_exit = exit_1(&arg_exit, clnt);
-  if (result_exit == NULL) {
-    clnt_perror(clnt, "call failed:");
-  }
-  
-  result_heartbeat = heartbeat_1(&arg_heartbeat, clnt);
-  if (result_heartbeat == NULL) {
-    clnt_perror(clnt, "call failed:");
-  }
-
-  clnt_destroy( clnt );
-
-  /*
-  char *localHostname = (char*) malloc((size_t)INET_ADDRSTRLEN);
-
-  if (localHostname == NULL) {
-    printf("Chat localHostname memory allocation failed. Exiting...\n");
-    return 1;
-  }
-  */
-
   // Obtains local IP address of the client
-  /*
   getLocalIp(localHostname);
-  if (strlen(localHostname) == 0) {
-    printf("Could not obtain a local hostname");
+  if (strlen(localHostname) == 0) {                   // How does this work?
+    printf("Could not obtain a local hostname");      // It's checking after the func was called
     return 1;
   }
-  */
-
   //Proceed with chat joining or creation
-  /*
   if (strlen(argv[1]) > MAX_USR_LEN-1) {
     //Truncate your foolishly long username
     argv[1][MAX_USR_LEN-1] = '\0';
@@ -217,23 +174,18 @@ int main(int argc, char * argv[]) {
   // Sets user input nickname to usrName var
   uname usrName = (uname) argv[1];
   char* remoteHostname;
-  */
 
   // Creates cname struct called me
-  /*
   cname* me = (cname *) malloc(sizeof(cname));
-  //clist =
   if (me == NULL) {
     printf("Error on client name memory allocation. Exiting...\n");
     return 1;
   }
-  */
 
   // Throws the usrName the user input into the cname struct (me) field userName
-  //memcpy(&(me->userName), usrName, strlen(usrName));
+  memcpy(&(me->userName), usrName, strlen(usrName));
 
   // A bloody mess
-  /*
   char portString[PORTSTRLEN];
   sprintf(portString, "%d", LOCALPORT);
   char localIpPortStr[MAX_IP_LEN];
@@ -242,17 +194,20 @@ int main(int argc, char * argv[]) {
   localIpPortStr[strlen(localHostname)+1] = '\0';
   strncat(localIpPortStr, portString, strlen(portString));
   memcpy(&(me->hostname), localIpPortStr, MAX_IP_LEN);
-  */
+
 
   //Create the RPC client objects
-  /*
   if (argc == 3) {
     //Joining an existing chat
     remoteHostname = argv[2];
     printf("%s joining an existing chat on %s, listening on %s:%d\n", usrName, remoteHostname, localHostname, LOCALPORT);
-    // create a CLIENT handle
-    clnt = clnt_create(remoteHostname, QCHAT, QCHATVERS, "udp");
+    // create client handle, check health:
+    int isClientAlive = init_client(localHostname);
+    if (isClientAlive == 1) {
+      clnt_pcreateerror(localHostname);
+      printf("Unable to activate a new chat on %s, try again later.\n", localHostname);
 
+    }
     // if connection doesn't succeed
     if (clnt == NULL) {
       clnt_pcreateerror(remoteHostname);
@@ -264,43 +219,24 @@ int main(int argc, char * argv[]) {
     //Creating a new chat
     printf("%s started a new chat, listening on %s:%d\n", usrName, localHostname, LOCALPORT);
     isSequencer = 1;
-    clnt = clnt_create(localHostname, QCHAT, QCHATVERS, "udp");
+    //clnt = clnt_create((char*)userdata.hostname, QCHAT, QCHATVERS, "udp");
+    init_client(localHostname);
     if (clnt == NULL) {
       clnt_pcreateerror(localHostname);
       printf("Unable to activate a new chat on %s, try again later.\n", localHostname);
       //return 1;
     }
   }
-  */
 
-  /*
   // Moves isSequencer value into [cname struct me], field leader_flag
   me->leader_flag = isSequencer;
-  //clientlist *clist;
-
-  // BEGIN
-  // DEBUGGING CALL TO JOIN
-  // test = malloc(sizeof(cname));
-  // test->userName = (uname) "andrew";
-  // test->hostname = (ip_port) "127.0.0.1:25001";
-  // test->leader_flag = 0;
-
-  // clientlist *clist = join_1(&test, clnt);
-  // if (clist == (clientlist *) NULL) {
-  //   clnt_perror(clnt, "call failed");
-  //   return 1;
-  // }
-  // else {
-  //   printf("returning from join_1_svc");
-  // }
-  // END DEBUG CALL TO JOIN
 
   // Message handling thread
   pthread_t handlerThread;
   pthread_attr_t attr;
   pthread_attr_init(&attr);
   pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
-  pthread_create(&handlerThread, &attr, messageHandler, (void*)clist);
+  pthread_create(&handlerThread, &attr, messageHandler, (void*)clientlist);
 
   // Message handling thread
   pthread_t electionThread;
@@ -331,10 +267,8 @@ int main(int argc, char * argv[]) {
   }
   return 0;
 
-  */
 
 }
-/*
 
 // An absolutely ridiculous way to get a local IP address
 void getLocalIp(char* buf) {
@@ -378,8 +312,8 @@ void getLocalIp(char* buf) {
     }
 }
 
-void print_client_list(clientlist * clist) {
-  int numClients = sizeof(*clist)/sizeof(cname), i;
+void print_client_list(clist * clientlist) {
+  int numClients = sizeof(*clientlist)/sizeof(cname), i;
   for (i=0 ; i < numClients; i++)
   {
     //printf("%s %s", ((cname)clist[i]).userName, ((cname)clist[i]).hostname);
@@ -394,6 +328,5 @@ void holdElection() {
   //Elect a new despot
 }
 
-*/
 
 

@@ -76,7 +76,7 @@ qchat_1(rqstp, transp)
 		cname join_1_arg;
 		msg_send send_1_arg;
 		msg_send exit_1_arg;
-		int heartbeat_1_arg;
+		u_int heartbeat_1_arg;
 	} argument;
 	char *result;
 	bool_t (*xdr_argument)(), (*xdr_result)();
@@ -108,7 +108,7 @@ qchat_1(rqstp, transp)
 		break;
 
 	case HEARTBEAT:
-		xdr_argument = xdr_int;
+		xdr_argument = xdr_u_int;
 		xdr_result = xdr_int;
 		local = (char *(*)()) heartbeat_1_svc;
 		break;
