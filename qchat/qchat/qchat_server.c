@@ -17,12 +17,14 @@
 #include "qchat.h"
 
 #define INITIAL_CLIENT_COUNT 8
+#define MSG_BUF_SIZE 128
 
 // Global pointer to clist, ptr needed bc of unknown size
 clist *clients;
+msg_recv *msg_buffer;
 int32_t initialized = FALSE;
-int32_t alloc_clients_size;
-int32_t seq_num = 0;
+int32_t alloc_clients_size;			// Are we using this anywhere? 
+uint32_t seq_num = 0;
 
 int init_data_structures() {
 
@@ -106,15 +108,15 @@ clist *join_1_svc(cname *userdata, struct svc_req *rqstp) {
 	}
 	
 	// Copy userdata into clist (using mem addrs.):
-  clients->clientlist.clientlist_val[clients->clientlist.clientlist_len].userName = (uname) strdup(userdata->userName);
-  clients->clientlist.clientlist_val[clients->clientlist.clientlist_len].hostname = (hoststr) strdup(userdata->hostname);
-	//memcpy(&(clients->clientlist.clientlist_val[clients->clientlist.clientlist_len].userName), &(userdata->userName), strlen((char*)userdata->userName));
-//memcpy(&(clients->clientlist.clientlist_val[clients->clientlist.clientlist_len].hostname), &(userdata->hostname), strlen((char*)userdata->hostname));
-  clients->clientlist.clientlist_val[clients->clientlist.clientlist_len].lport = userdata->lport;
-  clients->clientlist.clientlist_val[clients->clientlist.clientlist_len].leader_flag = userdata->leader_flag;
-  //memcpy(&(clients->clientlist.clientlist_val[clients->clientlist.clientlist_len]), userdata, sizeof(cname));
+	clients->clientlist.clientlist_val[clients->clientlist.clientlist_len].userName = (uname) strdup(userdata->userName);
+	clients->clientlist.clientlist_val[clients->clientlist.clientlist_len].hostname = (hoststr) strdup(userdata->hostname);
+  	//memcpy(&(clients->clientlist.clientlist_val[clients->clientlist.clientlist_len].userName), &(userdata->userName), strlen((char*)userdata->userName));
+  	//memcpy(&(clients->clientlist.clientlist_val[clients->clientlist.clientlist_len].hostname), &(userdata->hostname), strlen((char*)userdata->hostname));
+  	clients->clientlist.clientlist_val[clients->clientlist.clientlist_len].lport = userdata->lport;
+  	clients->clientlist.clientlist_val[clients->clientlist.clientlist_len].leader_flag = userdata->leader_flag;
+  	//memcpy(&(clients->clientlist.clientlist_val[clients->clientlist.clientlist_len]), userdata, sizeof(cname));
   
-	clients->clientlist.clientlist_len++;
+  	clients->clientlist.clientlist_len++;
 
     // This is a temporary fix.
     //initialized = FALSE;
@@ -122,25 +124,42 @@ clist *join_1_svc(cname *userdata, struct svc_req *rqstp) {
 	return(clients);
 }
 
-int *send_1_svc(msg_recv *argp, struct svc_req *rqstp) {
+int *send_1_svc(msg_recv *message, struct svc_req *rqstp) {
 
 	// takes in struct msg_recv from client
 	// returns int (ACK) when done
 
-	
+	static int result = 0, i;
+
+	// Knock up seq_num by 1:
+	seq_num = seq_num + 1;
+
+	// Allocate 128 message buffer:
+	// sizeof(msg_recv) is 18 BYTES
+	msg_buffer = malloc(sizeof(msg_recv)*MSG_BUF_SIZE);
+
+	// Move message into msg_buffer
+	for (i=0; i < seq_num; i++) {
+		msg_buffer[i].msg_sent = (msg_send) strdup(message->msg_sent);
+		printf("%s", msg_buffer->msg_sent);
+
+	}
+
+	/*
+	printf("%s", message->msg_sent);
+	printf("%s\n", message->user_sent);
+	printf("%d\n", seq_num);
+	printf("%x\n", message->msg_type);
+	*/
+
+	// Add msg_recv message into buffer:
 
 	// assign seq#
 	// multicast to clients, on fail/retry:
 	// 		remove client from clist
 	//		multicast exist msg, seq# 
-	static int result = 0;
 
-	if (!initialized) {
-		init_data_structures();
-	}
-
-  	multicast_message(argp);
-	
+  	//multicast_message(message);
 
 	return(&result);
 

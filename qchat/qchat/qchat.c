@@ -296,6 +296,7 @@ int main(int argc, char * argv[]) {
       if (inputmsg != NULL) {
         free(inputmsg);
       }
+      printf("seq_num: %d", result_send);
       inputmsg = (char*) calloc(MAX_MSG_LEN, sizeof(char));
   }
 
