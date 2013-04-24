@@ -114,7 +114,7 @@ void* electionHandler() {
     int64_t * result = heartbeat_1(&hbIndex, clnt);
     hbIndex ++;
   if(result == NULL) {
-    //SHIT! Lenin is dead. Call an election.
+    // Lenin is dead. Call an election.
     holdElection();
   }
   printf("%d\n", hbIndex);
@@ -130,8 +130,6 @@ void* init_client(char* host) {
   if (clnt != NULL) {
     clnt_destroy( clnt );
   }
-
-  // Move into separate procedure, along with clnt_destroy()
   clnt = clnt_create((char*)host, QCHAT, QCHATVERS, "udp");
 
   // Check to see if the client handle was created
@@ -250,7 +248,17 @@ int main(int argc, char * argv[]) {
       inputmsg[MAX_MSG_LEN-1]='\0';
       inputmsg[strlen(inputmsg)-1] = '\0';
       puts(inputmsg);
-      //int* result = send_1(&inputmsg);
+      msg_recv msg;
+      msg.msg_sent = (msg_send) strdup(&inputmsg);
+      msg.uname = userdata.userName;
+      int* result_send = send_1(&msg);
+
+      if (msg.msg_sent != NULL) {
+        free (msg.msg_sent);
+      }
+      if (result_send == NULL) {
+        clnt_perror(clnt, "RPC request to join chat failed:");
+      }
   }
 
   pthread_attr_destroy(&attr);
@@ -267,7 +275,6 @@ int main(int argc, char * argv[]) {
 
 // Automatic local IP address discovery
 void getLocalIp(char* buf) {
-  //Local IP address discovery protocol
   buf[0] = '\0';
   int sock = socket(AF_INET, SOCK_DGRAM, 0);
   if (sock == -1) {
@@ -318,15 +325,15 @@ void print_client_list(clist * client_list) {
   //int numClients = sizeof(*clientlist)/sizeof(cname), i;
   //int numClients = clientlist->clientlist.clientlist_len, i;
 
-  printf("%s %s:%d\n", client_list->clientlist.clientlist_val->userName, 
+  printf("%s %s:%d\n", client_list->clientlist.clientlist_val->userName,
                      client_list->clientlist.clientlist_val->hostname,
                      client_list->clientlist.clientlist_val->lport);
 
   /*
   for (i=0 ; i < numClients; i++) {
-    printf("%s %s:%d", ((uname)clientlist.clientlist[i]).userName, ((hoststr)clientlist.clientlist[i]).hostname, 
+    printf("%s %s:%d", ((uname)clientlist.clientlist[i]).userName, ((hoststr)clientlist.clientlist[i]).hostname,
     clientlist.clientlist[i].lport);
-    
+
     if (((int)clientlist[i]).leader_flag = 1) {
       printf("(Leader)");
     }
