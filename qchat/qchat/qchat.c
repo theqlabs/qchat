@@ -76,7 +76,9 @@ void* messageHandler(void* inputclist) {
   printf("Server socket ok\n");
 
   //Receive messages and do stuff with them
-
+  if(socketadd != NULL) {
+    free(socketadd);
+  }
   close(sockid);
   pthread_exit(NULL);
 }
@@ -129,30 +131,17 @@ int main(int argc, char * argv[]) {
   clist  *result_join;
   cname  userdata;
 
-  // Statically assigning for DEBUG reasons:
-  userdata.userName = (uname) argv[1];          // obtain from argv[1]
-  userdata.hostname = (ip_port) argv[2];        // obtain from getLocalIp()
-  userdata.leader_flag = 0;                     // obtain from int isSequencer
-
   // Send Variables:
   int *result_send;
   msg_send  arg_send;
 
-  // Exit Variables: 
+  // Exit Variables:
   int *result_exit;
   msg_send  arg_exit;
 
   // Heartbeat Variables:
   int *result_heartbeat;
   int arg_heartbeat;
-
-  char *localHostname = (char*) malloc((size_t)INET_ADDRSTRLEN);
-
-  // localHost NULL check:
-  if (localHostname == NULL) {
-    printf("Chat localHostname memory allocation failed. Exiting...\n");
-    return 1;
-  }
 
   // Usage:
   if (argc > 3 || argc < 2) {
@@ -161,9 +150,14 @@ int main(int argc, char * argv[]) {
   }
 
   // Obtains local IP address of the client
+  char *localHostname = (char*) malloc((size_t)INET_ADDRSTRLEN);
+  if (localHostname == NULL) {
+    printf("Chat localHostname memory allocation failed. Exiting...\n");
+    return 1;
+  }
   getLocalIp(localHostname);
-  if (strlen(localHostname) == 0) {                   // How does this work?
-    printf("Could not obtain a local hostname");      // It's checking after the func was called
+  if (strlen(localHostname) == 0) {
+    printf("Could not obtain a local hostname");
     return 1;
   }
   //Proceed with chat joining or creation
@@ -171,37 +165,12 @@ int main(int argc, char * argv[]) {
     //Truncate your foolishly long username
     argv[1][MAX_USR_LEN-1] = '\0';
   }
-  // Sets user input nickname to usrName var
-  uname usrName = (uname) argv[1];
-  char* remoteHostname;
-
-  // Creates cname struct called me
-  cname* me = (cname *) malloc(sizeof(cname));
-  if (me == NULL) {
-    printf("Error on client name memory allocation. Exiting...\n");
-    return 1;
-  }
-
-  // Throws the usrName the user input into the cname struct (me) field userName
-  memcpy(&(me->userName), usrName, strlen(usrName));
-
-  // A bloody mess
-  // try to use sprintf()
-  char portString[PORTSTRLEN];
-  sprintf(portString, "%d", LOCALPORT);
-  char localIpPortStr[MAX_IP_LEN];
-  strncpy(localIpPortStr, localHostname, strlen(localHostname)+1);
-  localIpPortStr[strlen(localHostname)] = ':';
-  localIpPortStr[strlen(localHostname)+1] = '\0';
-  strncat(localIpPortStr, portString, strlen(portString));
-  memcpy(&(me->hostname), localIpPortStr, MAX_IP_LEN);
-
 
   //Create the RPC client objects
   if (argc == 3) {
     //Joining an existing chat
-    remoteHostname = argv[2];
-    printf("%s joining an existing chat on %s, listening on %s:%d\n", usrName, remoteHostname, localHostname, LOCALPORT);
+    char *remoteHostname = argv[2];
+    printf("%s joining an existing chat on %s, listening on %s:%d\n", argv[1], remoteHostname, localHostname, LOCALPORT);
     // create client handle, check health:
     int isClientAlive = init_client(localHostname);
     if (isClientAlive == 1) {
@@ -218,7 +187,7 @@ int main(int argc, char * argv[]) {
 
   } else {
     //Creating a new chat
-    printf("%s started a new chat, listening on %s:%d\n", usrName, localHostname, LOCALPORT);
+    printf("%s started a new chat, listening on %s:%d\n", argv[1], localHostname, LOCALPORT);
     isSequencer = 1;
     printf("DOES IT REACH HERE?");
     int isClientAlive = init_client(localHostname);
@@ -229,8 +198,10 @@ int main(int argc, char * argv[]) {
     }
   }
 
-  // Moves isSequencer value into [cname struct me], field leader_flag
-  me->leader_flag = isSequencer;
+  userdata.userName = (uname) argv[1];          // obtain from argv[1]
+  userdata.hostname =  localHostname;
+  userdata.lport = LOCALPORT;
+  userdata.leader_flag = isSequencer;
 
   printf("username: %s", userdata.userName);
   printf("hostname: %s", userdata.hostname);
@@ -238,7 +209,7 @@ int main(int argc, char * argv[]) {
   // Call to join_1:
   result_join = join_1(&userdata, clnt);
   if (result_join == NULL) {
-    clnt_perror(clnt, "call failed:");
+    clnt_perror(clnt, "RPC request to join chat failed:");
   }
 
   // DEBUG PRINTS:
@@ -274,14 +245,10 @@ int main(int argc, char * argv[]) {
   pthread_kill(electionThread, SIGTERM);
 
   // Cleaning up memory!
-  if(me!= NULL) {
-    free(me);
-  }
   if(localHostname != NULL) {
     free(localHostname);
   }
   return 0;
-
 
 }
 
