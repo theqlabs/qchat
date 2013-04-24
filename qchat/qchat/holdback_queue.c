@@ -31,6 +31,7 @@ HoldbackQueue *hq_init(int (*cmp)(const void *m1, const void *m2), size_t init_c
       return NULL;
     }
     hq->num_elements = 0;
+    hq->capacity = init_capacity;
     return hq;
 }
 

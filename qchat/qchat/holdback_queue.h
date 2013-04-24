@@ -2,8 +2,8 @@
 #define _PQUEUE_H_
 
 typedef struct HQ {
-    size_t num_elements;
-    size_t capacity;
+    int32_t num_elements;
+    int32_t capacity;
     void **messages;
     int (*cmp)(const void *m1, const void *m2);
 } HoldbackQueue;
