@@ -186,6 +186,7 @@ int main(int argc, char * argv[]) {
   memcpy(&(me->userName), usrName, strlen(usrName));
 
   // A bloody mess
+  // try to use sprintf()
   char portString[PORTSTRLEN];
   sprintf(portString, "%d", LOCALPORT);
   char localIpPortStr[MAX_IP_LEN];
@@ -219,9 +220,9 @@ int main(int argc, char * argv[]) {
     //Creating a new chat
     printf("%s started a new chat, listening on %s:%d\n", usrName, localHostname, LOCALPORT);
     isSequencer = 1;
-    //clnt = clnt_create((char*)userdata.hostname, QCHAT, QCHATVERS, "udp");
-    init_client(localHostname);
-    if (clnt == NULL) {
+    printf("DOES IT REACH HERE?");
+    int isClientAlive = init_client(localHostname);
+    if (isClientAlive == 1) {
       clnt_pcreateerror(localHostname);
       printf("Unable to activate a new chat on %s, try again later.\n", localHostname);
       //return 1;
@@ -230,6 +231,20 @@ int main(int argc, char * argv[]) {
 
   // Moves isSequencer value into [cname struct me], field leader_flag
   me->leader_flag = isSequencer;
+
+  printf("username: %s", userdata.userName);
+  printf("hostname: %s", userdata.hostname);
+
+  // Call to join_1:
+  result_join = join_1(&userdata, clnt);
+  if (result_join == NULL) {
+    clnt_perror(clnt, "call failed:");
+  }
+
+  // DEBUG PRINTS:
+  printf("userName: %s\n", result_join->clientlist.clientlist_val->userName);
+  printf("hostname: %s\n", result_join->clientlist.clientlist_val->hostname);
+  printf("leader_flag: %d\n", result_join->clientlist.clientlist_val->leader_flag);
 
   // Message handling thread
   pthread_t handlerThread;
