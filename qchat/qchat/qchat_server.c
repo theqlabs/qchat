@@ -129,7 +129,8 @@ int *send_1_svc(msg_recv *message, struct svc_req *rqstp) {
 	// takes in struct msg_recv from client
 	// returns int (ACK) when done
 
-	static int result = 0, i;
+	static int result = 0;
+	int i;
 
 	// Knock up seq_num by 1:
 	seq_num = seq_num + 1;
@@ -140,17 +141,19 @@ int *send_1_svc(msg_recv *message, struct svc_req *rqstp) {
 
 	// Move message into msg_buffer
 	for (i=0; i < seq_num; i++) {
+		printf("before: %d\n", seq_num);
 		msg_buffer[i].msg_sent = (msg_send) strdup(message->msg_sent);
-		printf("%s", msg_buffer->msg_sent);
-
+		msg_buffer[i].user_sent = (uname) strdup(message->user_sent);
+		//msg_buffer[i].seq_num = (int) strdup(message->seq_num);
+		//msg_buffer[i].msg_type = (msg_type_t) strdup(message->msg_type);
+		printf("after: %d\n", seq_num);
 	}
 
-	/*
-	printf("%s", message->msg_sent);
-	printf("%s\n", message->user_sent);
-	printf("%d\n", seq_num);
-	printf("%x\n", message->msg_type);
-	*/
+	for (i=0; i < seq_num; i++) {
+		printf("before: %d\n", seq_num);
+		printf("[%s:%s:%d]", msg_buffer->msg_sent, msg_buffer->user_sent, seq_num);
+		printf("after: %d\n", seq_num);
+	}
 
 	// Add msg_recv message into buffer:
 
