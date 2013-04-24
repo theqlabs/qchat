@@ -24,6 +24,7 @@
 #include <stdint.h>
 
 #include "qchat.h"
+#include "holdback_queue.h"
 
 // Function Declarations
 void print_client_list(clist *);
@@ -37,6 +38,17 @@ const int HEARTBEAT_DELAY = 3000;
 int isSequencer = 0;
 CLIENT *clnt;
 clist *clientlist;
+HoldbackQueue *queue;
+
+int msgCompare(const void* m1, const void* m2) {
+  if(((msg_recv*)m1)->seq_num > ((msg_recv*)m2)->seq_num) {
+    return 1;
+  } else if (((msg_recv*)m1)->seq_num < ((msg_recv*)m2)->seq_num) {
+    return -1;
+  } else {
+    return 0;
+  }
+}
 
 static void sig_handler(int signal) {
   if(signal = SIGTERM) {
@@ -58,6 +70,15 @@ void* messageHandler(void* inputclist) {
 
   printf("Succeeded, current users:\n");
   print_client_list(inputclist);
+<<<<<<< HEAD
+=======
+
+  queue = hq_init(msgCompare, 64);
+  if (queue == NULL) {
+    printf("Error initializing message handling queue. Exiting...\n");
+    pthread_exit(NULL);
+  }
+>>>>>>> origin/master
   int sockid;
   if((sockid = socket(PF_INET, SOCK_DGRAM, 0)) <0) {
     perror("Error creating listening UDP socket");
@@ -198,7 +219,11 @@ int main(int argc, char * argv[]) {
   }
 
   userdata.userName = (uname) argv[1];
+<<<<<<< HEAD
   userdata.hostname = localHostname;
+=======
+  userdata.hostname =  localHostname;
+>>>>>>> origin/master
   userdata.lport = LOCALPORT;
   userdata.leader_flag = isSequencer;
 
@@ -224,16 +249,14 @@ int main(int argc, char * argv[]) {
   pthread_t electionThread;
   pthread_create(&electionThread, &attr, electionHandler, NULL);
 
-  //
+
   // The code that mimics chat functionality by replaying inputmsg
   char inputmsg[MAX_MSG_LEN];
   while (read(0, inputmsg, MAX_MSG_LEN) > 0) {
-//
       inputmsg[MAX_MSG_LEN-1]='\0';
       inputmsg[strlen(inputmsg)-1] = '\0';
       puts(inputmsg);
       //int* result = send_1(&inputmsg);
-//    }
   }
 
   pthread_attr_destroy(&attr);
@@ -248,7 +271,7 @@ int main(int argc, char * argv[]) {
 
 }
 
-// An absolutely ridiculous way to get a local IP address
+// Automatic local IP address discovery
 void getLocalIp(char* buf) {
   //Local IP address discovery protocol
   buf[0] = '\0';
