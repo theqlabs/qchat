@@ -8,7 +8,8 @@ CFLAGS="-w -ggdb3 -Wall -pedantic -O0 -std=gnu99"
 cc $CFLAGS -c -o qchat.o qchat.c
 cc $CFLAGS -c qchat_clnt.c
 cc $CFLAGS -c qchat_xdr.c
-cc -o qchat qchat.o qchat_clnt.o qchat_xdr.o
+cc $CFLAGS -c holdback_queue.c
+cc -o qchat qchat.o qchat_clnt.o qchat_xdr.o holdback_queue.o
 
 # make server
 cc $CFLAGS -c -o qchat_server.o qchat_server.c
