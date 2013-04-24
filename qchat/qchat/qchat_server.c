@@ -91,6 +91,7 @@ clist *join_1_svc(cname *userdata, struct svc_req *rqstp) {
 	  sleep(1);
      }
      */
+    initialized = FALSE;
 
 	return(clients);
 }
