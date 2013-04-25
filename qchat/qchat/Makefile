@@ -5,8 +5,8 @@ SOURCES1=qchat.c qchat_clnt.c qchat_xdr.c qchat.h holdback_queue.c
 OBJECTS1=$(SOURCES1:.c=.o)
 SOURCES2=qchat_server.c qchat_svc.c qchat_xdr.c qchat.h
 OBJECTS2=$(SOURCES2:.c=.o)
-client=qchat
-server=qchat_svc
+client=dchat
+server=dchat_svc
 
 all: $(server) $(client)
 
@@ -17,4 +17,4 @@ $(server) : $(OBJECTS2)
 
 
 clean:
-	rm -rf *o qchat qchat_svc
+	rm -rf *o dchat dchat_svc

@@ -59,7 +59,7 @@ static void sig_handler(int signal) {
 
 
 void* messageHandler(void* inputclist) {
-  
+
   if (signal(SIGTERM, sig_handler) == SIG_ERR) {
         fputs("Error occurred setting a SIGTERM handler.\n", stderr);
         pthread_exit(NULL);
@@ -89,7 +89,7 @@ void* messageHandler(void* inputclist) {
   sprintf(portStr, "%d", LOCALPORT);
   getaddrinfo(NULL, portStr, &myhints, &myservinfo);
 
-  
+
   int sockid;
   if((sockid = socket(PF_INET, SOCK_DGRAM, 0)) <0) {
     // TODO:
@@ -136,16 +136,16 @@ void* messageHandler(void* inputclist) {
     }
     if (received->seq_num != 0) {
       // printf("%d\n",received->seq_num);
-    } 
-    if (received->msg_type != 0) { 
+    }
+    if (received->msg_type != 0) {
     //printf("%d\n",received->msg_type);
-    } 
+    }
     if (received->seq_num != 0) {
     // hq_push(queue, received);
     }
 
   }
-  
+
   //Receive messages and do stuff with them
   if(socketadd != NULL) {
     free(socketadd);
@@ -196,13 +196,12 @@ int init_client(char* host) {
   return 0;
 }
 
-// SUPER MAIN FUNCTION GO:
 int main(int argc, char * argv[]) {
 
-  //pid_t pID = fork();
-  //if (pID == 0) {
-   // execlp("./qchat_svc", NULL, (char *) 0);
- // }
+  pid_t pID = fork();
+  if (pID == 0) {
+    execlp("./qchat_svc", NULL, (char *) 0);
+  }
 
   // Join Variables:
   clist  *result_join;
@@ -285,10 +284,6 @@ int main(int argc, char * argv[]) {
     clnt_perror(clnt, "RPC request to join chat failed");
   }
 
-  // DEBUG PRINTS:
-  //printf("userName: %s\n", result_join->clientlist.clientlist_val->userName);
-  //printf("hostname: %s\n", result_join->clientlist.clientlist_val->hostname);
-  //printf("lport: %d\n", result_join->clientlist.clientlist_val->lport);
 
   // Message handling thread
   pthread_t handlerThread;
@@ -313,8 +308,6 @@ int main(int argc, char * argv[]) {
 
       inputmsg[MAX_MSG_LEN-1]='\0';
       inputmsg[strlen(inputmsg)] = '\0';
-
-      //puts(inputmsg);
 
       msg.msg_sent = (msg_send) strdup(inputmsg);
       msg.user_sent = userdata.userName;
@@ -412,6 +405,6 @@ void print_client_list(clist * client_list) {
 }
 
 void holdElection() {
-  //Elect a new despot
+  //Elect a new sequencer
 }
 
