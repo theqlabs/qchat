@@ -78,7 +78,7 @@ void multicast_message(msg_recv* message) {
 		init_data_structures();
 	}
 
-  struct addrinfo myhints;
+struct addrinfo myhints;
 struct addrinfo *myservinfo;
 memset(&myhints, 0, sizeof myhints);
 myhints.ai_family = AF_INET;
@@ -146,9 +146,6 @@ freeaddrinfo(myservinfo);
 
 clist *join_1_svc(cname *userdata, struct svc_req *rqstp) {
 
-	// takes in struct CNAME (me) from client
-	// returns clientlist when done
-
 	// Add to clientlist
 	// return current clientlist
 	// multicast new member msg, seq#
@@ -158,19 +155,12 @@ clist *join_1_svc(cname *userdata, struct svc_req *rqstp) {
 		init_data_structures();
 	}
 	
-	// Copy userdata into clist (using mem addrs.):
 	clients->clientlist.clientlist_val[clients->clientlist.clientlist_len].userName = (uname) strdup(userdata->userName);
 	clients->clientlist.clientlist_val[clients->clientlist.clientlist_len].hostname = (hoststr) strdup(userdata->hostname);
-  	//memcpy(&(clients->clientlist.clientlist_val[clients->clientlist.clientlist_len].userName), &(userdata->userName), strlen((char*)userdata->userName));
-  	//memcpy(&(clients->clientlist.clientlist_val[clients->clientlist.clientlist_len].hostname), &(userdata->hostname), strlen((char*)userdata->hostname));
-  	clients->clientlist.clientlist_val[clients->clientlist.clientlist_len].lport = userdata->lport;
+	clients->clientlist.clientlist_val[clients->clientlist.clientlist_len].lport = userdata->lport;
   	clients->clientlist.clientlist_val[clients->clientlist.clientlist_len].leader_flag = userdata->leader_flag;
-  	//memcpy(&(clients->clientlist.clientlist_val[clients->clientlist.clientlist_len]), userdata, sizeof(cname));
-  
-  	clients->clientlist.clientlist_len++;
 
-    // This is a temporary fix.
-    //initialized = FALSE;
+  	clients->clientlist.clientlist_len++;
 
 	return(clients);
 }
@@ -184,38 +174,22 @@ int *send_1_svc(msg_recv *message, struct svc_req *rqstp) {
 		init_data_structures();
 	}
 
-	// DEBUG FROM CLIENT:
-	/*
-	printf("msg_recv *message:\n");
-	printf("message msg_sent: %s", message->msg_sent);
-	printf("message user_sent: %s\n", message->user_sent);
-	printf("message msg_type: %d\n", message->msg_type);
-	*/
-
 	// Move message into msg_buffer
 	//printf("before: %d\n", seq_num);
-	msg_buffer->msg_sent = (char *) malloc(sizeof(msg_send));
-	msg_buffer->user_sent = (char *) malloc(sizeof(uname));
-	strcpy(msg_buffer->msg_sent, message->msg_sent);
-	strcpy(msg_buffer->user_sent, message->user_sent);
+	msg_buffer[seq_num % MSG_BUF_SIZE].msg_sent = (char *) malloc(sizeof(msg_send)*strlen(message->msg_sent));
+	msg_buffer[seq_num % MSG_BUF_SIZE].user_sent = (char *) malloc(sizeof(uname)*strlen(message->user_sent));
+	strcpy(msg_buffer[seq_num % MSG_BUF_SIZE].msg_sent, message->msg_sent);
+	strcpy(msg_buffer[seq_num % MSG_BUF_SIZE].user_sent, message->user_sent);
+	msg_buffer[seq_num % MSG_BUF_SIZE].seq_num = seq_num;
+	msg_buffer[seq_num % MSG_BUF_SIZE].msg_type = message->msg_type;
 
-	printf("msg_sent: %s ", msg_buffer->msg_sent);
-	printf("user_sent: %s\n", msg_buffer->user_sent);
-
-	//msg_buffer[seq_num % MSG_BUF_SIZE].msg_sent = (msg_send) strdup(message->msg_sent);
-	//msg_buffer[seq_num % MSG_BUF_SIZE].user_sent = (uname) strdup(message->user_sent);
-	//msg_buffer[seq_num % MSG_BUF_SIZE].seq_num = message->seq_num;
-	//msg_buffer[seq_num % MSG_BUF_SIZE].msg_type = message->msg_type;
-	//printf("after: %d\n", seq_num);
-
-	//printf("before: %d\n", seq_num);
-	//printf("[%s:%s:%d]", msg_buffer->msg_sent, msg_buffer->user_sent, seq_num);
-	//printf("after: %d\n", seq_num);
+	printf("msg_sent: %s", msg_buffer[seq_num % MSG_BUF_SIZE].msg_sent);
+	printf("user_sent: %s\n", msg_buffer[seq_num % MSG_BUF_SIZE].user_sent);
+	printf("seq: %d\n", seq_num);
+	printf("msg_type: %d\n", msg_buffer[seq_num % MSG_BUF_SIZE].msg_type);
 
 	// Knock up seq_num by 1:
 	seq_num = seq_num + 1;
-
-	// Add msg_recv message into buffer:
 
 	// assign seq#
 	// multicast to clients, on fail/retry:
