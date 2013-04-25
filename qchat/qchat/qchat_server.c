@@ -179,23 +179,36 @@ int *send_1_svc(msg_recv *message, struct svc_req *rqstp) {
 		free(msg_buffer[seq_num%MSG_BUF_SIZE].msg_sent);
 	}
 
-	printf("message msg_sent: %s\n", message->msg_sent);
+	// DEBUG FROM CLIENT:
+	/*
+	printf("msg_recv *message:\n");
+	printf("message msg_sent: %s", message->msg_sent);
 	printf("message user_sent: %s\n", message->user_sent);
 	printf("message msg_type: %d\n", message->msg_type);
-
-	/*
-	// Move message into msg_buffer
-	printf("before: %d\n", seq_num);
-	msg_buffer[seq_num % MSG_BUF_SIZE].msg_sent = (msg_send) strdup(message->msg_sent);
-	msg_buffer[seq_num % MSG_BUF_SIZE].user_sent = (uname) strdup(message->user_sent);
-	msg_buffer[seq_num % MSG_BUF_SIZE].seq_num = message->seq_num;
-	msg_buffer[seq_num % MSG_BUF_SIZE].msg_type = message->msg_type;
-	printf("after: %d\n", seq_num);
-
-	printf("before: %d\n", seq_num);
-	printf("[%s:%s:%d]", msg_buffer->msg_sent, msg_buffer->user_sent, seq_num);
-	printf("after: %d\n", seq_num);
 	*/
+
+	// Move message into msg_buffer
+	//printf("before: %d\n", seq_num);
+	msg_buffer->msg_sent = malloc(sizeof(char*));
+	msg_buffer->user_sent = malloc(sizeof(char*));
+	strcpy(msg_buffer->msg_sent, message->msg_sent);
+	strcpy(msg_buffer->user_sent, message->user_sent);
+
+	printf("msg_sent: %s ", msg_buffer->msg_sent);
+	printf("user_sent: %s\n", msg_buffer->user_sent);
+
+	free(msg_buffer->msg_sent);
+	free(msg_buffer->user_sent);
+
+	//msg_buffer[seq_num % MSG_BUF_SIZE].msg_sent = (msg_send) strdup(message->msg_sent);
+	//msg_buffer[seq_num % MSG_BUF_SIZE].user_sent = (uname) strdup(message->user_sent);
+	//msg_buffer[seq_num % MSG_BUF_SIZE].seq_num = message->seq_num;
+	//msg_buffer[seq_num % MSG_BUF_SIZE].msg_type = message->msg_type;
+	//printf("after: %d\n", seq_num);
+
+	//printf("before: %d\n", seq_num);
+	//printf("[%s:%s:%d]", msg_buffer->msg_sent, msg_buffer->user_sent, seq_num);
+	//printf("after: %d\n", seq_num);
 
 	// Knock up seq_num by 1:
 	seq_num = seq_num + 1;
