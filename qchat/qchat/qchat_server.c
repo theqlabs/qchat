@@ -4,6 +4,7 @@
 // this is the RPC code executed only by the sequencer
 //
 
+
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -15,10 +16,21 @@
 #include <stdint.h>
 #include <unistd.h>
 #include <netdb.h>
+
 #include "qchat.h"
+
+// For sendDatagram function:
+#define BUFLEN 512
+#define NPACK 10
+#define PORT 9930
+#define SRV_IP "127.0.0.1"
 
 #define INITIAL_CLIENT_COUNT 8
 #define MSG_BUF_SIZE 256
+
+// If DEBUG is set, various debugging statements
+// are triggered to help debug RPC calls mostly
+//#define DEBUG
 
 // Global pointer to clist, ptr needed bc of unknown size
 const int LOCALPORT = 10001;
@@ -74,77 +86,57 @@ void destroy_data_structures() {
   }
 }
 
-void multicast_message(msg_recv* message) {
-  
-  if (!initialized) {
-		init_data_structures();
-	}
-
-    struct addrinfo myhints;
-    struct addrinfo *myservinfo;
-    memset(&myhints, 0, sizeof myhints);
-    myhints.ai_family = AF_INET;
-    myhints.ai_socktype = SOCK_DGRAM;
-    myhints.ai_flags = AI_PASSIVE;
-    getaddrinfo(NULL, "12001", &myhints, &myservinfo);
-
-
-    int i;
-    for(i = 0; i < clients->clientlist.clientlist_len; i++) {
-    const char* userAddr = clients->clientlist.clientlist_val[i].hostname;
-    uint16_t userPort = (uint16_t) clients->clientlist.clientlist_val[i].lport;
-    
-    struct addrinfo hints;
-    struct addrinfo *servinfo;  // will point to the results
-    memset(&hints, 0, sizeof hints); // make sure the struct is empty
-    hints.ai_family = AF_UNSPEC;     // don't care IPv4 or IPv6
-    hints.ai_socktype = SOCK_STREAM; // TCP stream sockets
-    char* portStr = malloc(sizeof(char) * 7);
-    sprintf(portStr, "%d", userPort);
-    getaddrinfo(userAddr, portStr, &hints, &servinfo);    
-
-    int sock = socket(myhints.ai_family, myhints.ai_socktype, 0);
-    connect(sock, servinfo->ai_addr, servinfo->ai_protocol);
-    if (sock == -1) {
-      continue;
-    }
-
-    struct sockaddr_in* socketadd;    
-    socketadd = (struct sockaddr_in*) malloc(sizeof(struct sockaddr_in));
-    memset(socketadd,0,sizeof(sizeof(struct sockaddr_in)));    
-    socketadd->sin_family = AF_INET;
-    socketadd->sin_addr.s_addr = inet_addr(userAddr);
-    socketadd->sin_port = htons(userPort);
-
-    if (sendto(sock,(void*)message->msg_sent,(size_t) strlen((char*)message->msg_sent),0,(struct sockaddr *) socketadd,sizeof(struct sockaddr)) < 0) {
-	       perror("sendto");
-	       continue;
-	  }
-
-    if (sendto(sock,(void*)message->user_sent, (size_t) strlen((char*)message->user_sent),0,(struct sockaddr *) socketadd,sizeof(struct sockaddr)) < 0) {
-	       perror("sendto");
-	       continue;
-	  }
-
-    if (sendto(sock,(void*)message->seq_num,sizeof(uint32_t),0,(struct sockaddr *) socketadd,sizeof(struct sockaddr)) < 0) {
-	       perror("sendto");
-	       continue;
-	  }
-
-    if (sendto(sock,(void*)message->msg_type,sizeof(msg_type_t),0,(struct sockaddr *) socketadd,sizeof(struct sockaddr)) < 0) {
-	       perror("sendto");
-	       continue;
-	  }
-    /*
-    write(sock, (void*)message->msg_sent , (size_t) strlen((char*)message->msg_sent));
-    write(sock, (void*)message->user_sent , (size_t) strlen((char*)message->user_sent));
-    write(sock, (void*)message->seq_num , sizeof(int));
-    write(sock, (void*)message->msg_type, sizeof(msg_type_t));
-    */
-    close(sock);
-  }
-freeaddrinfo(myservinfo);
+// Errors, printing value of s: 
+void diep(char *s) {
+  perror(s);
+  exit(1);
 }
+
+// Sends UDP packet:
+void sendDatagram(msg_send sd_message, uname sd_user) {
+
+  struct sockaddr_in si_other;
+  int s, i, slen=sizeof(si_other);
+  char buf[BUFLEN]; 
+
+  // Attempt to open a socket:
+  if ((s=socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP))==-1) {
+    diep("socket");
+  }
+
+  // memset - fill a byte string with a byte value:
+  memset((char *) &si_other, 0, sizeof(si_other));
+
+  // AF_INET is the address family for IP:
+  si_other.sin_family = AF_INET;
+  si_other.sin_port = htons(PORT);
+
+  // int inet_aton(const char *cp, struct in_addr *inp);
+  // Converts internet host addr cp from IPv4 numbers and dots notation
+  // into binary form (in network byte order), stores it inside the
+  // structure that *inp points to.
+  if (inet_aton(SRV_IP, &si_other.sin_addr)==0) {
+    fprintf(stderr, "inet_aton() failed\n");
+    exit(1);
+  }
+
+  #ifdef DEBUG
+  	printf("Sending packet %d\n\n", seq_num);
+	printf("sd_message: %s, sd_user: %s\n", sd_message, sd_user);
+  #endif
+
+  // int sprintf(char * restrict str, const char * restrict format, ...);
+  sprintf(buf, "%s says %s\n", sd_user, sd_message);
+
+  // ssize_t sendto(int socket, const void *buffer, size_t length, int flags, 
+  // const struct sockaddr *dest_addr, socklen_t dest_len);
+  if (sendto(s, buf, BUFLEN, 0, &si_other, slen)==-1) {
+    diep("sendto()");
+  }
+
+  close(s);
+}
+
 
 clist *join_1_svc(cname *userdata, struct svc_req *rqstp) {
 
@@ -185,20 +177,28 @@ int *send_1_svc(msg_recv *message, struct svc_req *rqstp) {
 	msg_buffer[seq_num % MSG_BUF_SIZE].seq_num = seq_num;
 	msg_buffer[seq_num % MSG_BUF_SIZE].msg_type = message->msg_type;
 
-	printf("msg_sent: %s", msg_buffer[seq_num % MSG_BUF_SIZE].msg_sent);
-	printf("user_sent: %s\n", msg_buffer[seq_num % MSG_BUF_SIZE].user_sent);
-	printf("seq: %d\n", seq_num);
-	printf("msg_type: %d\n", msg_buffer[seq_num % MSG_BUF_SIZE].msg_type);
-
-	// Knock up seq_num by 1:
-	seq_num = seq_num + 1;
+	#ifdef DEBUG
+		printf("msg_sent: %s", msg_buffer[seq_num % MSG_BUF_SIZE].msg_sent);
+		printf("user_sent: %s\n", msg_buffer[seq_num % MSG_BUF_SIZE].user_sent);
+		printf("seq: %d\n", seq_num);
+		printf("msg_type: %d\n", msg_buffer[seq_num % MSG_BUF_SIZE].msg_type);
+	#endif
 
 	// assign seq#
 	// multicast to clients, on fail/retry:
 	// 		remove client from clist
 	//		multicast exist msg, seq# 
 
-  	//multicast_message(message);
+	//printf("msg_sent after debug, before sd shit %s", msg_buffer[seq_num % MSG_BUF_SIZE].msg_sent);
+	//msg_send sd_message = msg_buffer[seq_num % MSG_BUF_SIZE].msg_sent;
+	//uname sd_user = msg_buffer[seq_num % MSG_BUF_SIZE].user_sent;
+	//printf("before sd message: %s\n", sd_message);
+	//printf("before sd user: %s\n", sd_user);
+	
+	sendDatagram(msg_buffer[seq_num % MSG_BUF_SIZE].msg_sent, msg_buffer[seq_num % MSG_BUF_SIZE].user_sent);
+
+	// Knock up seq_num by 1:
+	seq_num = seq_num + 1;
 
 	return(&result);
 

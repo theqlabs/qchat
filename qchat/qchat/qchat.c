@@ -27,6 +27,11 @@
 #include "qchat.h"
 #include "holdback_queue.h"
 
+// For recvDatagram function:
+#define BUFLEN 512
+#define NPACK 10
+#define PORT 9930
+
 // Function Declarations
 void print_client_list(clist *);
 void getLocalIp(char*);
@@ -57,102 +62,48 @@ static void sig_handler(int signal) {
   }
 }
 
+// Errors, printing value of s: 
+void diep(char *s) {
+  perror(s);
+  exit(1);
+}
 
-void* messageHandler(void* inputclist) {
+// Receives UDP packet: 
+void recvDatagram(void) {
 
-  if (signal(SIGTERM, sig_handler) == SIG_ERR) {
-        fputs("Error occurred setting a SIGTERM handler.\n", stderr);
-        pthread_exit(NULL);
-    }
+  // Create two structs of type sockaddr_in:
+  struct sockaddr_in si_me, si_other;
+  int s, i, slen = sizeof(si_other);
+  char buf[BUFLEN];
 
-  if(inputclist == NULL) {
-    printf("Socket listener received an empty clientlist. Exiting...\n");
-    pthread_exit(NULL);
+  // Attempts to open a socket s, with parameters:
+  if ((s=socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP))==-1) {
+    diep("socket");
   }
 
-  printf("Succeeded, current users:\n");
-  print_client_list(inputclist);
+  memset((char *) &si_me, 0, sizeof(si_me));
+  si_me.sin_family = AF_INET;
 
-  queue = hq_init(msgCompare, 64);
-  if (queue == NULL) {
-    printf("Error initializing message handling queue. Exiting...\n");
-    pthread_exit(NULL);
+  /// htons - converts unsigned short integer hostshort from host byte order to network byte order
+  si_me.sin_port = htons(PORT);
+
+  // htonl - converts unsigned integer netlong from network byte order to host byte order
+  si_me.sin_addr.s_addr = htonl(INADDR_ANY);
+
+  // Attempts to bind to socket s
+  // what is si_me ??
+  if (bind(s, &si_me, sizeof(si_me))==-1) {
+    diep("bind");
   }
 
-  struct addrinfo myhints;
-  struct addrinfo *myservinfo;
-  memset(&myhints, 0, sizeof (myhints));
-  myhints.ai_family = AF_INET;
-  myhints.ai_socktype = SOCK_DGRAM;
-  myhints.ai_flags = 0;
-  char * portStr = malloc(sizeof(char) * 7);
-  sprintf(portStr, "%d", LOCALPORT);
-  getaddrinfo(NULL, portStr, &myhints, &myservinfo);
-
-
-  int sockid;
-  if((sockid = socket(PF_INET, SOCK_DGRAM, 0)) <0) {
-    // TODO:
-    // I think this should have code to indicate when there is a chat active
-    // on a port, it lets the user know
-    // Also, we're using static LPORT values, so we're hitting this any
-    // time we create a new chat twice in the same server instance.
-    perror("Error creating listening UDP socket");
-    pthread_exit(NULL);
+  for (i=0; i<NPACK; i++) {
+    if (recvfrom(s, buf, BUFLEN, 0, &si_other, &slen)==-1) {
+      diep("recvfrom()");
+    }
+    printf("Received packet from %s:%d\nData: %s\n\n", inet_ntoa(si_other.sin_addr), ntohs(si_other.sin_port), buf);
   }
 
-  if((bind(sockid, myservinfo->ai_addr, myservinfo->ai_addrlen))<0) {
-    close(sockid);
-    perror("Error binding to listening UDP socket");
-    pthread_exit(NULL);
-  }
-  listen(sockid, 16);
-  socklen_t len = (socklen_t) sizeof(struct sockaddr_in);
-  struct sockaddr_in* socketadd = (struct sockaddr_in*) malloc(sizeof(struct sockaddr_in));
-  socketadd->sin_family = AF_INET;
-  socketadd->sin_port = htons(LOCALPORT);
-  int newSock = accept(sockid, (struct sockaddr *) &socketadd, &len);
-  printf("Server socket ok\n");
-
-  while (1) {
-    msg_recv* received = (msg_recv*) malloc(sizeof(msg_recv));
-    received->msg_sent = (char *) malloc(sizeof(char*)*MAX_MSG_LEN);
-    received->user_sent = (char *) malloc(sizeof(char*)*MAX_USR_LEN);
-    if(received == NULL) {
-    perror("Error allocating memory for incoming message");
-    pthread_exit(NULL);
-    }
-
-    recvfrom(newSock, (received->msg_sent), MAX_MSG_LEN, 0, (struct sockaddr *) socketadd,&len);
-    recvfrom (newSock, (received->user_sent), MAX_USR_LEN, 0, (struct sockaddr *) socketadd,&len);
-    recvfrom (newSock, (received->seq_num), sizeof(unsigned int), 0, (struct sockaddr *) socketadd, &len);
-    recvfrom (newSock, &(received->msg_type), sizeof(msg_type_t), 0, (struct sockaddr *) socketadd, &len);
-
-    if (received->msg_sent != NULL) {
-    //printf("%s\n",(char*) received->msg_sent);
-    }
-    if (received->user_sent != NULL) {
-      //printf("%s\n",(char*) received->user_sent);
-    }
-    if (received->seq_num != 0) {
-      // printf("%d\n",received->seq_num);
-    }
-    if (received->msg_type != 0) {
-    //printf("%d\n",received->msg_type);
-    }
-    if (received->seq_num != 0) {
-    // hq_push(queue, received);
-    }
-
-  }
-
-  //Receive messages and do stuff with them
-  if(socketadd != NULL) {
-    free(socketadd);
-  }
-  close(sockid);
-  freeaddrinfo(myservinfo);
-  pthread_exit(NULL);
+  close(s);
 }
 
 /*
@@ -290,7 +241,9 @@ int main(int argc, char * argv[]) {
   pthread_attr_t attr;
   pthread_attr_init(&attr);
   pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
-  pthread_create(&handlerThread, &attr, messageHandler, (void*)result_join);
+  // What's the purpose of result_join here? if recvDatagram is the start routine:
+  // If this causes problems, try NULL for the final parameter
+  pthread_create(&handlerThread, &attr, recvDatagram, (void*)result_join);
 
   // Election handling thread
   //pthread_t electionThread;
@@ -313,6 +266,7 @@ int main(int argc, char * argv[]) {
       msg.user_sent = userdata.userName;
       msg.msg_type = TEXT;
 
+      // Calls the send_1 RPC:
       int* result_send = send_1(&msg, clnt);
       if (result_send == NULL) {
         clnt_perror(clnt, "RPC request to join chat failed:");
