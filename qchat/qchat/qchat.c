@@ -304,14 +304,20 @@ int main(int argc, char * argv[]) {
   if (inputmsg == NULL) {
     return 1;
   }
+  // Message struct msg_recv:
+  msg_recv msg;
+
   while (read(0, inputmsg, MAX_MSG_LEN) > 0) {
+
       inputmsg[MAX_MSG_LEN-1]='\0';
       inputmsg[strlen(inputmsg)] = '\0';
+
       //puts(inputmsg);
-      msg_recv msg;
+
       msg.msg_sent = (msg_send) strdup(inputmsg);
       msg.user_sent = userdata.userName;
       msg.msg_type = TEXT;
+
       int* result_send = send_1(&msg, clnt);
       if (result_send == NULL) {
         clnt_perror(clnt, "RPC request to join chat failed:");

@@ -3,6 +3,7 @@
 # -O0 shuts off all optimizations for debugging results
 
 CFLAGS="-w -ggdb3 -Wall -pedantic -O0 -std=gnu99"
+LDFLAGS="-pthread"
 
 # make client
 cc $CFLAGS -c -o qchat.o qchat.c
