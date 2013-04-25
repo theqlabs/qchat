@@ -154,6 +154,7 @@ if (received->seq_num != 0) {
   pthread_exit(NULL);
 }
 
+/*
 void* electionHandler() {
 
   if (signal(SIGTERM, sig_handler) == SIG_ERR) {
@@ -175,6 +176,7 @@ void* electionHandler() {
 
   pthread_exit(NULL);
 }
+*/
 
 int init_client(char* host) {
 
@@ -296,8 +298,8 @@ int main(int argc, char * argv[]) {
   pthread_create(&handlerThread, &attr, messageHandler, (void*)result_join);
 
   // Election handling thread
-  pthread_t electionThread;
-  pthread_create(&electionThread, &attr, electionHandler, NULL);
+  //pthread_t electionThread;
+  //pthread_create(&electionThread, &attr, electionHandler, NULL);
 
   // The code that mimics chat functionality by replaying inputmsg
   char* inputmsg = (char*) calloc(MAX_MSG_LEN, sizeof(char));
@@ -333,7 +335,7 @@ int main(int argc, char * argv[]) {
 
   pthread_attr_destroy(&attr);
   pthread_kill(handlerThread, SIGTERM);
-  pthread_kill(electionThread, SIGTERM);
+  //pthread_kill(electionThread, SIGTERM);
 
   //Terminate RPC process
   if(clnt != NULL) {

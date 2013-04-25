@@ -8,7 +8,7 @@ OBJECTS2=$(SOURCES2:.c=.o)
 client=qchat
 server=qchat_svc
 
-all: $(SOURCES1) $(client)
+all: $(server) $(client)
 
 $(client): $(OBJECTS1)
 	$(CC) $(LDFLAGS) $(OBJECTS1) -o $@
@@ -17,5 +17,4 @@ $(server) : $(OBJECTS2)
 
 
 clean:
-	rm -rf *o qchat
-	rm qchat_svc
+	rm -rf *o qchat qchat_svc
