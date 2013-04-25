@@ -57,7 +57,9 @@ static void sig_handler(int signal) {
   }
 }
 
+
 void* messageHandler(void* inputclist) {
+  
   if (signal(SIGTERM, sig_handler) == SIG_ERR) {
         fputs("Error occurred setting a SIGTERM handler.\n", stderr);
         pthread_exit(NULL);
@@ -106,45 +108,44 @@ void* messageHandler(void* inputclist) {
   }
   listen(sockid, 16);
   socklen_t len = (socklen_t) sizeof(struct sockaddr_in);
-struct sockaddr_in* socketadd = (struct sockaddr_in*) malloc(sizeof(struct sockaddr_in));
+  struct sockaddr_in* socketadd = (struct sockaddr_in*) malloc(sizeof(struct sockaddr_in));
   socketadd->sin_family = AF_INET;
   socketadd->sin_port = htons(LOCALPORT);
   int newSock = accept(sockid, (struct sockaddr *) &socketadd, &len);
   printf("Server socket ok\n");
 
   while (1) {
-   msg_recv* received = (msg_recv*) malloc(sizeof(msg_recv));
-   received->msg_sent = (char *) malloc(sizeof(char*)*MAX_MSG_LEN);
-  received->user_sent = (char *) malloc(sizeof(char*)*MAX_USR_LEN);
-   if(received == NULL) {
+    msg_recv* received = (msg_recv*) malloc(sizeof(msg_recv));
+    received->msg_sent = (char *) malloc(sizeof(char*)*MAX_MSG_LEN);
+    received->user_sent = (char *) malloc(sizeof(char*)*MAX_USR_LEN);
+    if(received == NULL) {
     perror("Error allocating memory for incoming message");
     pthread_exit(NULL);
-   }
+    }
 
-  recvfrom(newSock, (received->msg_sent), MAX_MSG_LEN, 0, (struct sockaddr *) socketadd,&len);
-recvfrom (newSock, (received->user_sent), MAX_USR_LEN, 0, (struct sockaddr *) socketadd,&len);
-recvfrom (newSock, (received->seq_num), sizeof(unsigned int), 0, (struct sockaddr *) socketadd, &len);
-recvfrom (newSock, &(received->msg_type), sizeof(msg_type_t), 0, (struct sockaddr *) socketadd, &len);
+    recvfrom(newSock, (received->msg_sent), MAX_MSG_LEN, 0, (struct sockaddr *) socketadd,&len);
+    recvfrom (newSock, (received->user_sent), MAX_USR_LEN, 0, (struct sockaddr *) socketadd,&len);
+    recvfrom (newSock, (received->seq_num), sizeof(unsigned int), 0, (struct sockaddr *) socketadd, &len);
+    recvfrom (newSock, &(received->msg_type), sizeof(msg_type_t), 0, (struct sockaddr *) socketadd, &len);
 
     if (received->msg_sent != NULL) {
     //printf("%s\n",(char*) received->msg_sent);
-}
-if (received->user_sent != NULL) {
-    //printf("%s\n",(char*) received->user_sent);
-}
-if (received->seq_num != 0) {
-   // printf("%d\n",received->seq_num);
-} 
-if (received->msg_type != 0) { 
-  //printf("%d\n",received->msg_type);
-} 
-if (received->seq_num != 0) {
-  // hq_push(queue, received);
-}
+    }
+    if (received->user_sent != NULL) {
+      //printf("%s\n",(char*) received->user_sent);
+    }
+    if (received->seq_num != 0) {
+      // printf("%d\n",received->seq_num);
+    } 
+    if (received->msg_type != 0) { 
+    //printf("%d\n",received->msg_type);
+    } 
+    if (received->seq_num != 0) {
+    // hq_push(queue, received);
+    }
 
   }
   
-
   //Receive messages and do stuff with them
   if(socketadd != NULL) {
     free(socketadd);
@@ -202,7 +203,6 @@ int main(int argc, char * argv[]) {
   //if (pID == 0) {
    // execlp("./qchat_svc", NULL, (char *) 0);
  // }
-
 
   // Join Variables:
   clist  *result_join;

@@ -21,10 +21,12 @@
 #define MSG_BUF_SIZE 256
 
 // Global pointer to clist, ptr needed bc of unknown size
+const int LOCALPORT = 10001;
 clist *clients;
 msg_recv *msg_buffer;
+
 int32_t initialized = FALSE;
-int32_t alloc_clients_size;			// Are we using this anywhere? 
+int32_t alloc_clients_size;
 uint32_t seq_num = 0;
 
 int init_data_structures() {
@@ -78,17 +80,17 @@ void multicast_message(msg_recv* message) {
 		init_data_structures();
 	}
 
-struct addrinfo myhints;
-struct addrinfo *myservinfo;
-memset(&myhints, 0, sizeof myhints);
-myhints.ai_family = AF_INET;
-myhints.ai_socktype = SOCK_DGRAM;
-myhints.ai_flags = AI_PASSIVE;
-getaddrinfo(NULL, "12001", &myhints, &myservinfo);
+    struct addrinfo myhints;
+    struct addrinfo *myservinfo;
+    memset(&myhints, 0, sizeof myhints);
+    myhints.ai_family = AF_INET;
+    myhints.ai_socktype = SOCK_DGRAM;
+    myhints.ai_flags = AI_PASSIVE;
+    getaddrinfo(NULL, "12001", &myhints, &myservinfo);
 
 
-  int i;
-  for(i = 0; i < clients->clientlist.clientlist_len; i++) {
+    int i;
+    for(i = 0; i < clients->clientlist.clientlist_len; i++) {
     const char* userAddr = clients->clientlist.clientlist_val[i].hostname;
     uint16_t userPort = (uint16_t) clients->clientlist.clientlist_val[i].lport;
     
@@ -107,7 +109,7 @@ getaddrinfo(NULL, "12001", &myhints, &myservinfo);
       continue;
     }
 
-struct sockaddr_in* socketadd;    
+    struct sockaddr_in* socketadd;    
     socketadd = (struct sockaddr_in*) malloc(sizeof(struct sockaddr_in));
     memset(socketadd,0,sizeof(sizeof(struct sockaddr_in)));    
     socketadd->sin_family = AF_INET;
@@ -133,12 +135,12 @@ struct sockaddr_in* socketadd;
 	       perror("sendto");
 	       continue;
 	  }
-/*
+    /*
     write(sock, (void*)message->msg_sent , (size_t) strlen((char*)message->msg_sent));
     write(sock, (void*)message->user_sent , (size_t) strlen((char*)message->user_sent));
     write(sock, (void*)message->seq_num , sizeof(int));
     write(sock, (void*)message->msg_type, sizeof(msg_type_t));
-*/
+    */
     close(sock);
   }
 freeaddrinfo(myservinfo);

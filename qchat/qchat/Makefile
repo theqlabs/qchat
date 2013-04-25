@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS= -g -Wall -pedantic -O0 -std=gnu99
+CFLAGS= -w -g -Wall -pedantic -O0 -std=gnu99
 LDFLAGS= -pthread
 SOURCES1=qchat.c qchat_clnt.c qchat_xdr.c qchat.h holdback_queue.c
 OBJECTS1=$(SOURCES1:.c=.o)
