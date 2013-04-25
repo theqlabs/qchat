@@ -337,7 +337,9 @@ int main(int argc, char * argv[]) {
 
   //Terminate RPC process
   if(clnt != NULL) {
-    shutdownserv_1(NULL, clnt);  
+    if(userdata.leader_flag == 1){
+      shutdownserv_1(NULL, clnt);
+    }
     clnt_destroy(clnt);
   }
 

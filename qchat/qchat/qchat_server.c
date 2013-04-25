@@ -42,6 +42,15 @@ int init_data_structures() {
 		fprintf(stderr, "Error initializing data structures\n");
 		return -1;
 	}
+
+	// Allocate 128 message buffer:
+	// sizeof(msg_recv) is 18 BYTES
+	msg_buffer = malloc(sizeof(msg_recv)*MSG_BUF_SIZE);
+
+	if (msg_buffer.msg_sent != NULL) {
+		free(msg_buffer.msg_sent);
+	}
+
 	initialized = TRUE;
 
 	return 0;
@@ -54,6 +63,15 @@ void destroy_data_structures() {
         free(clients->clientlist.clientlist_val);
       }
       free(clients);
+    }
+    // Add free to each msg_buffer element:
+    if(msg_buffer != NULL) {
+    	if (msg_buffer.msg_sent != NULL) {
+    		free(msg_buffer.msg_sent);
+    	}
+    	if (msg_buffer.user_sent != NULL){
+    		free(msg.buffer.user_sent);
+    	}
     }
   }
 }
@@ -169,16 +187,6 @@ int *send_1_svc(msg_recv *message, struct svc_req *rqstp) {
 	static int result = 0;
 	int i;
 
-	// TODO:
-	// MOVE TO init_data_structures
-	// ADD free() to destroy procedure
-	// Allocate 128 message buffer:
-	// sizeof(msg_recv) is 18 BYTES
-	msg_buffer = malloc(sizeof(msg_recv)*MSG_BUF_SIZE);
-	if (msg_buffer[seq_num%MSG_BUF_SIZE].msg_sent != NULL) {
-		free(msg_buffer[seq_num%MSG_BUF_SIZE].msg_sent);
-	}
-
 	// DEBUG FROM CLIENT:
 	/*
 	printf("msg_recv *message:\n");
@@ -197,8 +205,9 @@ int *send_1_svc(msg_recv *message, struct svc_req *rqstp) {
 	printf("msg_sent: %s ", msg_buffer->msg_sent);
 	printf("user_sent: %s\n", msg_buffer->user_sent);
 
-	free(msg_buffer->msg_sent);
-	free(msg_buffer->user_sent);
+
+	// STOP THE LEAKING MEMORY:
+	destroy_data_structures();
 
 	//msg_buffer[seq_num % MSG_BUF_SIZE].msg_sent = (msg_send) strdup(message->msg_sent);
 	//msg_buffer[seq_num % MSG_BUF_SIZE].user_sent = (uname) strdup(message->user_sent);
