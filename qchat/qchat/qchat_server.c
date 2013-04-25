@@ -194,17 +194,13 @@ int *send_1_svc(msg_recv *message, struct svc_req *rqstp) {
 
 	// Move message into msg_buffer
 	//printf("before: %d\n", seq_num);
-	msg_buffer->msg_sent = malloc(sizeof(char*));
-	msg_buffer->user_sent = malloc(sizeof(char*));
+	msg_buffer->msg_sent = (char *) malloc(sizeof(msg_send));
+	msg_buffer->user_sent = (char *) malloc(sizeof(uname));
 	strcpy(msg_buffer->msg_sent, message->msg_sent);
 	strcpy(msg_buffer->user_sent, message->user_sent);
 
 	printf("msg_sent: %s ", msg_buffer->msg_sent);
 	printf("user_sent: %s\n", msg_buffer->user_sent);
-
-
-	// STOP THE LEAKING MEMORY:
-	destroy_data_structures();
 
 	//msg_buffer[seq_num % MSG_BUF_SIZE].msg_sent = (msg_send) strdup(message->msg_sent);
 	//msg_buffer[seq_num % MSG_BUF_SIZE].user_sent = (uname) strdup(message->user_sent);
