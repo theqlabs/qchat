@@ -47,10 +47,6 @@ int init_data_structures() {
 	// sizeof(msg_recv) is 18 BYTES
 	msg_buffer = malloc(sizeof(msg_recv)*MSG_BUF_SIZE);
 
-	if (msg_buffer.msg_sent != NULL) {
-		free(msg_buffer.msg_sent);
-	}
-
 	initialized = TRUE;
 
 	return 0;
@@ -66,11 +62,11 @@ void destroy_data_structures() {
     }
     // Add free to each msg_buffer element:
     if(msg_buffer != NULL) {
-    	if (msg_buffer.msg_sent != NULL) {
-    		free(msg_buffer.msg_sent);
+    	if (msg_buffer->msg_sent != NULL) {
+    		free(msg_buffer->msg_sent);
     	}
-    	if (msg_buffer.user_sent != NULL){
-    		free(msg.buffer.user_sent);
+    	if (msg_buffer->user_sent != NULL){
+    		free(msg_buffer->user_sent);
     	}
     }
   }
@@ -181,11 +177,12 @@ clist *join_1_svc(cname *userdata, struct svc_req *rqstp) {
 
 int *send_1_svc(msg_recv *message, struct svc_req *rqstp) {
 
-	// takes in struct msg_recv from client
-	// returns int (ACK) when done
-
 	static int result = 0;
 	int i;
+
+	if (!initialized) {
+		init_data_structures();
+	}
 
 	// DEBUG FROM CLIENT:
 	/*
