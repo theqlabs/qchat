@@ -32,6 +32,10 @@
 #define NPACK 10
 #define PORT 9930
 
+// If DEBUG is set, various debugging statements
+// are triggered to help debug RPC calls mostly
+// #define DEBUG
+
 // Function Declarations
 void print_client_list(clist *);
 void getLocalIp(char*);
@@ -97,10 +101,14 @@ void recvDatagram(void) {
   }
 
   for (i=0; i<NPACK; i++) {
-    if (recvfrom(s, buf, BUFLEN, 0, &si_other, &slen)==-1) {
-      diep("recvfrom()");
-    }
+    if (recvfrom(s, buf, BUFLEN, 0, &si_other, &slen)==-1) {diep("recvfrom()");}
+
+    #ifdef DEBUG
     printf("Received packet from %s:%d\nData: %s\n\n", inet_ntoa(si_other.sin_addr), ntohs(si_other.sin_port), buf);
+    #endif DEBUG
+
+    printf("client side: %s", buf);
+
   }
 
   close(s);

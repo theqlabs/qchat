@@ -8,11 +8,13 @@
 const MAX_MSG_LEN = 512;        /* 64 Bytes */
 const MAX_USR_LEN = 32;         /* 4 Bytes  */
 const MAX_IP_LEN =  32;		    /* 4 Bytes  */
+const BUFLEN = 556;             /* WTF MATE */
 
 typedef string msg_send<MAX_MSG_LEN>;
 typedef string uname<MAX_USR_LEN>;
 typedef string hoststr<MAX_IP_LEN>;
 enum msg_type_t {TEXT = 0, NEWUSER = 1, USEREXIT = 2, ELECTION = 3};
+enum status_code {SUCCESS = 0, FAILURE = 1, UNAMEINUSE = 2, UNAMEINVALID = 3};
 
 struct cname {
     uname userName;
@@ -36,7 +38,7 @@ struct msg_recv {
 
 program QCHAT {
     version QCHATVERS {
-        clist JOIN(cname) = 1;
+        int JOIN(cname) = 1;
         int SEND(msg_recv) = 2;
         int EXIT(msg_recv) = 3;
         msg_recv REDELIVER(unsigned int) = 4;
