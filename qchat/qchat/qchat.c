@@ -23,14 +23,13 @@
 #include <sys/socket.h>
 #include <signal.h>
 #include <stdint.h>
-
 #include "qchat.h"
 #include "holdback_queue.h"
 
-// For recvDatagram function:
-#define BUFLEN 512
-#define NPACK 10
+//#define NPACK 10
 #define PORT 9930
+
+#define HOLD_Q_SIZE 128
 
 // If DEBUG is set, various debugging statements
 // are triggered to help debug RPC calls mostly
@@ -66,14 +65,19 @@ static void sig_handler(int signal) {
   }
 }
 
-// Errors, printing value of s: 
+// Errors, printing value of s:
 void diep(char *s) {
   perror(s);
   exit(1);
 }
 
-// Receives UDP packet: 
+// Receives UDP packet:
 void recvDatagram(void) {
+
+  if (signal(SIGTERM, sig_handler) == SIG_ERR) {
+      fputs("Error occurred setting a SIGTERM handler.\n", stderr);
+      pthread_exit(NULL);
+   }
 
   // Create two structs of type sockaddr_in:
   struct sockaddr_in si_me, si_other;
@@ -95,20 +99,18 @@ void recvDatagram(void) {
   si_me.sin_addr.s_addr = htonl(INADDR_ANY);
 
   // Attempts to bind to socket s
-  // what is si_me ??
   if (bind(s, &si_me, sizeof(si_me))==-1) {
     diep("bind");
   }
 
-  for (i=0; i<NPACK; i++) {
-    if (recvfrom(s, buf, BUFLEN, 0, &si_other, &slen)==-1) {diep("recvfrom()");}
-
-    #ifdef DEBUG
-    printf("Received packet from %s:%d\nData: %s\n\n", inet_ntoa(si_other.sin_addr), ntohs(si_other.sin_port), buf);
-    #endif DEBUG
-
-    printf("client side: %s", buf);
-
+  while(TRUE) {
+    if (recvfrom(s, buf, BUFLEN, 0, &si_other, &slen)==-1) {
+      diep("recvfrom()");
+    }
+    printf("Received packet from %s:%d\nData: %s\n", inet_ntoa(si_other.sin_addr), ntohs(si_other.sin_port), buf);
+    printf("MsgType: %s\n", buf);
+    printf("SeqNum: %s\n", buf[2]);
+    printf("Username: %s\n", buf[12]);
   }
 
   close(s);
@@ -163,7 +165,6 @@ int main(int argc, char * argv[]) {
   }
 
   // Join Variables:
-  clist  *result_join;
   cname  userdata;
 
   // Send Variables:
@@ -177,6 +178,8 @@ int main(int argc, char * argv[]) {
   // Heartbeat Variables:
   int *result_heartbeat;
   int arg_heartbeat;
+
+  queue = hq_init(msgCompare, HOLD_Q_SIZE);
 
   // Usage:
   if (argc > 3 || argc < 2) {
@@ -238,20 +241,28 @@ int main(int argc, char * argv[]) {
   userdata.leader_flag = isSequencer;
 
   // Call to join_1:
+  int* joinResult = join_1(&userdata, clnt);
+  if (joinResult == NULL) {
   result_join = join_1(&userdata, clnt);
   if (result_join == NULL) {
     clnt_perror(clnt, "RPC request to join chat failed");
+  } else if (joinResult == UNAMEINUSE) {
+    printf("Sorry, there is another user in the chat with that username. Please try again.\n");
+    return 1;
+  } else if (joinResult == UNAMEINVALID) {
+    printf("Sorry, username is not valid. Only alphanumeric characters are allowed in chat usernames.\nPlease try again.\n");
+    return 1;
+  } else if (joinResult == FAILURE) {
+    printf("Joining the specified chat failed. Please try again later.\n");
+    return 1;
   }
-
 
   // Message handling thread
   pthread_t handlerThread;
   pthread_attr_t attr;
   pthread_attr_init(&attr);
   pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
-  // What's the purpose of result_join here? if recvDatagram is the start routine:
-  // If this causes problems, try NULL for the final parameter
-  pthread_create(&handlerThread, &attr, recvDatagram, (void*)result_join);
+  pthread_create(&handlerThread, &attr, recvDatagram, NULL);
 
   // Election handling thread
   //pthread_t electionThread;
@@ -277,7 +288,7 @@ int main(int argc, char * argv[]) {
       // Calls the send_1 RPC:
       int* result_send = send_1(&msg, clnt);
       if (result_send == NULL) {
-        clnt_perror(clnt, "RPC request to join chat failed:");
+        clnt_perror(clnt, "RPC request to send message failed:");
       }
       if (msg.msg_sent != NULL) {
         free (msg.msg_sent);
@@ -288,6 +299,7 @@ int main(int argc, char * argv[]) {
       inputmsg = (char*) calloc(MAX_MSG_LEN, sizeof(char));
   }
 
+  //Fix shutdown procedure when ctrl-c is pressed
   pthread_attr_destroy(&attr);
   pthread_kill(handlerThread, SIGTERM);
   //pthread_kill(electionThread, SIGTERM);
