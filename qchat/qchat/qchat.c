@@ -31,6 +31,10 @@
 
 #define HOLD_Q_SIZE 128
 
+// If DEBUG is set, various debugging statements
+// are triggered to help debug RPC calls mostly
+// #define DEBUG
+
 // Function Declarations
 void print_client_list(clist *);
 void getLocalIp(char*);
@@ -239,6 +243,8 @@ int main(int argc, char * argv[]) {
   // Call to join_1:
   int* joinResult = join_1(&userdata, clnt);
   if (joinResult == NULL) {
+  result_join = join_1(&userdata, clnt);
+  if (result_join == NULL) {
     clnt_perror(clnt, "RPC request to join chat failed");
   } else if (joinResult == UNAMEINUSE) {
     printf("Sorry, there is another user in the chat with that username. Please try again.\n");

@@ -4,7 +4,6 @@
 // this is the RPC code executed only by the sequencer
 //
 
-
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -20,7 +19,7 @@
 #include "qchat.h"
 
 // For sendDatagram function:
-#define BUFLEN 512
+#define BUFLEN 556
 #define NPACK 10
 #define PORT 9930
 #define SRV_IP "127.0.0.1"
@@ -30,7 +29,7 @@
 
 // If DEBUG is set, various debugging statements
 // are triggered to help debug RPC calls mostly
-//#define DEBUG
+// #define DEBUG
 
 // Global pointer to clist, ptr needed bc of unknown size
 const int LOCALPORT = 10001;
@@ -93,10 +92,11 @@ void diep(char *s) {
 }
 
 // Sends UDP packet:
-void sendDatagram(msg_send sd_message, uname sd_user) {
+void sendDatagram(msg_type_t msgType, uint32_t sequence, uname sd_user, msg_send sd_message) {
 
   struct sockaddr_in si_other;
   int s, i, slen=sizeof(si_other);
+  
   char buf[BUFLEN]; 
 
   // Attempt to open a socket:
@@ -121,18 +121,17 @@ void sendDatagram(msg_send sd_message, uname sd_user) {
   }
 
   #ifdef DEBUG
-  	printf("Sending packet %d\n\n", seq_num);
-	printf("sd_message: %s, sd_user: %s\n", sd_message, sd_user);
+  printf("Sending packet %d\n\n", seq_num);
+  printf("sd_message: %s, sd_user: %s\n", sd_message, sd_user);
   #endif
 
   // int sprintf(char * restrict str, const char * restrict format, ...);
-  sprintf(buf, "%s says %s\n", sd_user, sd_message);
+  sprintf(buf, "%d,%d,%s,%s", msgType, sequence, sd_user, sd_message);
+
 
   // ssize_t sendto(int socket, const void *buffer, size_t length, int flags, 
   // const struct sockaddr *dest_addr, socklen_t dest_len);
-  if (sendto(s, buf, BUFLEN, 0, &si_other, slen)==-1) {
-    diep("sendto()");
-  }
+  if (sendto(s, buf,  BUFLEN, 0, &si_other, slen)==-1) {diep("sendto()");}
 
   close(s);
 }
@@ -143,6 +142,8 @@ clist *join_1_svc(cname *userdata, struct svc_req *rqstp) {
 	// Add to clientlist
 	// return current clientlist
 	// multicast new member msg, seq#
+
+	// Validate username, if it exists error
 
 	// If initialized is FALSE, run init procedure:
 	if (!initialized) {
@@ -178,10 +179,10 @@ int *send_1_svc(msg_recv *message, struct svc_req *rqstp) {
 	msg_buffer[seq_num % MSG_BUF_SIZE].msg_type = message->msg_type;
 
 	#ifdef DEBUG
-		printf("msg_sent: %s", msg_buffer[seq_num % MSG_BUF_SIZE].msg_sent);
-		printf("user_sent: %s\n", msg_buffer[seq_num % MSG_BUF_SIZE].user_sent);
-		printf("seq: %d\n", seq_num);
-		printf("msg_type: %d\n", msg_buffer[seq_num % MSG_BUF_SIZE].msg_type);
+	printf("msg_sent: %s", msg_buffer[seq_num % MSG_BUF_SIZE].msg_sent);
+	printf("user_sent: %s\n", msg_buffer[seq_num % MSG_BUF_SIZE].user_sent);
+	printf("seq: %d\n", seq_num);
+	printf("msg_type: %d\n", msg_buffer[seq_num % MSG_BUF_SIZE].msg_type);
 	#endif
 
 	// assign seq#
@@ -195,7 +196,12 @@ int *send_1_svc(msg_recv *message, struct svc_req *rqstp) {
 	//printf("before sd message: %s\n", sd_message);
 	//printf("before sd user: %s\n", sd_user);
 	
-	sendDatagram(msg_buffer[seq_num % MSG_BUF_SIZE].msg_sent, msg_buffer[seq_num % MSG_BUF_SIZE].user_sent);
+	// type, sequence, sender, msg
+	sendDatagram(
+				msg_buffer[seq_num % MSG_BUF_SIZE].msg_type,
+				msg_buffer[seq_num % MSG_BUF_SIZE].seq_num,
+				msg_buffer[seq_num % MSG_BUF_SIZE].user_sent, 
+				msg_buffer[seq_num % MSG_BUF_SIZE].msg_sent);
 
 	// Knock up seq_num by 1:
 	seq_num = seq_num + 1;

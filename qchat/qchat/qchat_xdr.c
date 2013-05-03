@@ -6,84 +6,101 @@
 #include "qchat.h"
 
 bool_t
-xdr_msg_send (XDR *xdrs, msg_send *objp)
+xdr_msg_send(xdrs, objp)
+	XDR *xdrs;
+	msg_send *objp;
 {
-	register int32_t *buf;
 
-	 if (!xdr_string (xdrs, objp, MAX_MSG_LEN))
-		 return FALSE;
-	return TRUE;
+	if (!xdr_string(xdrs, objp, MAX_MSG_LEN))
+		return (FALSE);
+	return (TRUE);
 }
 
 bool_t
-xdr_uname (XDR *xdrs, uname *objp)
+xdr_uname(xdrs, objp)
+	XDR *xdrs;
+	uname *objp;
 {
-	register int32_t *buf;
 
-	 if (!xdr_string (xdrs, objp, MAX_USR_LEN))
-		 return FALSE;
-	return TRUE;
+	if (!xdr_string(xdrs, objp, MAX_USR_LEN))
+		return (FALSE);
+	return (TRUE);
 }
 
 bool_t
-xdr_hoststr (XDR *xdrs, hoststr *objp)
+xdr_hoststr(xdrs, objp)
+	XDR *xdrs;
+	hoststr *objp;
 {
-	register int32_t *buf;
 
-	 if (!xdr_string (xdrs, objp, MAX_IP_LEN))
-		 return FALSE;
-	return TRUE;
+	if (!xdr_string(xdrs, objp, MAX_IP_LEN))
+		return (FALSE);
+	return (TRUE);
 }
 
 bool_t
-xdr_msg_type_t (XDR *xdrs, msg_type_t *objp)
+xdr_msg_type_t(xdrs, objp)
+	XDR *xdrs;
+	msg_type_t *objp;
 {
-	register int32_t *buf;
 
-	 if (!xdr_enum (xdrs, (enum_t *) objp))
-		 return FALSE;
-	return TRUE;
+	if (!xdr_enum(xdrs, (enum_t *)objp))
+		return (FALSE);
+	return (TRUE);
 }
 
 bool_t
-xdr_cname (XDR *xdrs, cname *objp)
+xdr_status_code(xdrs, objp)
+	XDR *xdrs;
+	status_code *objp;
 {
-	register int32_t *buf;
 
-	 if (!xdr_uname (xdrs, &objp->userName))
-		 return FALSE;
-	 if (!xdr_hoststr (xdrs, &objp->hostname))
-		 return FALSE;
-	 if (!xdr_int (xdrs, &objp->lport))
-		 return FALSE;
-	 if (!xdr_int (xdrs, &objp->leader_flag))
-		 return FALSE;
-	return TRUE;
+	if (!xdr_enum(xdrs, (enum_t *)objp))
+		return (FALSE);
+	return (TRUE);
 }
 
 bool_t
-xdr_clist (XDR *xdrs, clist *objp)
+xdr_cname(xdrs, objp)
+	XDR *xdrs;
+	cname *objp;
 {
-	register int32_t *buf;
 
-	 if (!xdr_array (xdrs, (char **)&objp->clientlist.clientlist_val, (u_int *) &objp->clientlist.clientlist_len, ~0,
-		sizeof (cname), (xdrproc_t) xdr_cname))
-		 return FALSE;
-	return TRUE;
+	if (!xdr_uname(xdrs, &objp->userName))
+		return (FALSE);
+	if (!xdr_hoststr(xdrs, &objp->hostname))
+		return (FALSE);
+	if (!xdr_int(xdrs, &objp->lport))
+		return (FALSE);
+	if (!xdr_int(xdrs, &objp->leader_flag))
+		return (FALSE);
+	return (TRUE);
 }
 
 bool_t
-xdr_msg_recv (XDR *xdrs, msg_recv *objp)
+xdr_clist(xdrs, objp)
+	XDR *xdrs;
+	clist *objp;
 {
-	register int32_t *buf;
 
-	 if (!xdr_msg_send (xdrs, &objp->msg_sent))
-		 return FALSE;
-	 if (!xdr_uname (xdrs, &objp->user_sent))
-		 return FALSE;
-	 if (!xdr_u_int (xdrs, &objp->seq_num))
-		 return FALSE;
-	 if (!xdr_msg_type_t (xdrs, &objp->msg_type))
-		 return FALSE;
-	return TRUE;
+	if (!xdr_array(xdrs, (char **)&objp->clientlist.clientlist_val, (u_int *)&objp->clientlist.clientlist_len, ~0, sizeof(cname), (xdrproc_t)xdr_cname))
+		return (FALSE);
+	return (TRUE);
+}
+
+bool_t
+xdr_msg_recv(xdrs, objp)
+	XDR *xdrs;
+	msg_recv *objp;
+{
+
+	if (!xdr_msg_send(xdrs, &objp->msg_sent))
+		return (FALSE);
+	if (!xdr_uname(xdrs, &objp->user_sent))
+		return (FALSE);
+	if (!xdr_u_int(xdrs, &objp->seq_num))
+		return (FALSE);
+	if (!xdr_msg_type_t(xdrs, &objp->msg_type))
+		return (FALSE);
+	return (TRUE);
 }
