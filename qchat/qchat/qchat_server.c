@@ -19,7 +19,6 @@
 #include "qchat.h"
 
 // For sendDatagram function:
-#define BUFLEN 556
 #define NPACK 10
 #define PORT 9930
 #define SRV_IP "127.0.0.1"
@@ -137,7 +136,7 @@ void sendDatagram(msg_type_t msgType, uint32_t sequence, uname sd_user, msg_send
 }
 
 
-clist *join_1_svc(cname *userdata, struct svc_req *rqstp) {
+int *join_1_svc(cname *userdata, struct svc_req *rqstp) {
 
 	// Add to clientlist
 	// return current clientlist

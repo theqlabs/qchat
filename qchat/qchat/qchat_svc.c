@@ -16,6 +16,8 @@
 #include <netinet/in.h>
 #include <syslog.h>
 
+#define DEBUG
+
 #ifdef __STDC__
 #define SIG_PF void(*)(int)
 #endif

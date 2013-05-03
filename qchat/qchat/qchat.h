@@ -62,8 +62,8 @@ bool_t xdr_msg_type_t();
 
 
 enum status_code {
-	SUCCESS = 0,
-	FAILURE = 1,
+	JSUCCESS = 0,
+	JFAILURE = 1,
 	UNAMEINUSE = 2,
 	UNAMEINVALID = 3,
 };

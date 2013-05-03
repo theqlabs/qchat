@@ -14,7 +14,7 @@ typedef string msg_send<MAX_MSG_LEN>;
 typedef string uname<MAX_USR_LEN>;
 typedef string hoststr<MAX_IP_LEN>;
 enum msg_type_t {TEXT = 0, NEWUSER = 1, USEREXIT = 2, ELECTION = 3};
-enum status_code {SUCCESS = 0, FAILURE = 1, UNAMEINUSE = 2, UNAMEINVALID = 3};
+enum status_code {JSUCCESS = 0, JFAILURE = 1, UNAMEINUSE = 2, UNAMEINVALID = 3};
 
 struct cname {
     uname userName;
