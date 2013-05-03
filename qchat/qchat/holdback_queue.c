@@ -1,3 +1,8 @@
+
+//
+// Implementation of a templatized holdback queue
+//
+
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
