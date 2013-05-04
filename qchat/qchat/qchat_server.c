@@ -31,7 +31,6 @@
 // #define DEBUG
 
 // Global pointer to clist, ptr needed bc of unknown size
-const int LOCALPORT = 10001;
 clist *clients;
 msg_recv *msg_buffer;
 
