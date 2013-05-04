@@ -48,6 +48,7 @@ int isSequencer = 0;
 CLIENT *clnt;
 clist *clientlist;
 HoldbackQueue *queue;
+char buf[BUFLEN];
 
 int msgCompare(const void* m1, const void* m2) {
   if(((msg_recv*)m1)->seq_num > ((msg_recv*)m2)->seq_num) {

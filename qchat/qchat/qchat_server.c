@@ -31,6 +31,7 @@
 // Global pointer to clist, ptr needed bc of unknown size
 clist *clients;
 msg_recv *msg_buffer;
+char buf[BUFLEN]; 
 
 int32_t initialized = FALSE;
 int32_t alloc_clients_size;
