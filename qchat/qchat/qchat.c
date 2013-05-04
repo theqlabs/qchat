@@ -134,6 +134,7 @@ void recvDatagram(void) {
       }
       //puts(msgbuf);
 
+
     msg_recv* inMsg = malloc(sizeof(msg_recv));
     if(inMsg == NULL) {
       diep("Incoming message allocation failed");
@@ -172,7 +173,7 @@ void recvDatagram(void) {
     expectedSeq++;
     printf("%s: %s\n", (*nextMsg).user_sent, (*nextMsg).msg_sent);
   }
-
+  close(fd);
 }
 
 /*
