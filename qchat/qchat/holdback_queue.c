@@ -60,7 +60,7 @@ void hq_push(HoldbackQueue *hq, const void *msg) {
     hq->num_elements++;
 }
 
-void *pq_pop(HoldbackQueue *hq) {
+void *hq_pop(HoldbackQueue *hq) {
     if(hq == NULL) {
       return NULL;
     }

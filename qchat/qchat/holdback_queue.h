@@ -1,5 +1,5 @@
-#ifndef _PQUEUE_H_
-#define _PQUEUE_H_
+#ifndef _HQUEUE_H_
+#define _HQUEUE_H_
 
 typedef struct HQ {
     int32_t num_elements;
@@ -14,6 +14,6 @@ void hq_delete(HoldbackQueue *hq);
 
 void hq_push(HoldbackQueue *hq, const void *msg);
 
-void *pq_pop(HoldbackQueue *hq);
+void *hq_pop(HoldbackQueue *hq);
 
 #endif
