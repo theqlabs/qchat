@@ -166,13 +166,14 @@ void recvDatagram(void) {
     if(nextMsg == NULL) {
       printf("No messages in the message queue\n");
     }
-    expectedSeq = 0;
-    if(expectedSeq == -1) {
-      expectedSeq = (*nextMsg).seq_num;
-    } else if((*nextMsg).seq_num != expectedSeq) {
+
+     if(expectedSeq == -1) {
+       expectedSeq = (*nextMsg).seq_num;
+     } else if((*nextMsg).seq_num != expectedSeq) {
+      //int toRedeliver = 0;
       int toRedeliver = (*nextMsg).seq_num ++;
       while (toRedeliver <= expectedSeq) {
-        nextMsg = redeliver_1(toRedeliver);
+        nextMsg = redeliver_1(&toRedeliver, clnt);
         printf("%s: %s\n", (*nextMsg).user_sent, (*nextMsg).msg_sent);
         toRedeliver++;
       }
