@@ -18,17 +18,15 @@
 
 #include "qchat.h"
 
-// For sendDatagram function:
-#define NPACK 10
-#define PORT 9930
-#define SRV_IP "127.0.0.1"
+#define HELLO_PORT 12345
+#define HELLO_GROUP "225.0.0.37"
 
 #define INITIAL_CLIENT_COUNT 8
 #define MSG_BUF_SIZE 256
 
 // If DEBUG is set, various debugging statements
 // are triggered to help debug RPC calls mostly
-// #define DEBUG
+#define DEBUG
 
 // Global pointer to clist, ptr needed bc of unknown size
 clist *clients;
@@ -90,48 +88,40 @@ void diep(char *s) {
 }
 
 // Sends UDP packet:
-void sendDatagram(msg_type_t msgType, uint32_t sequence, uname sd_user, msg_send sd_message) {
+void sendDatagram() {
 
-  struct sockaddr_in si_other;
-  int s, i, slen=sizeof(si_other);
-  
-  char buf[BUFLEN]; 
+	//struct ip_mreq {
+	//    struct in_addr imr_multiaddr; /* multicast group to join */
+	//    struct in_addr imr_interface; /* interface to join on */
+	//}
 
-  // Attempt to open a socket:
-  if ((s=socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP))==-1) {
-    diep("socket");
-  }
+	struct sockaddr_in addr;
+	int fd, cnt;
+	struct ip_mreq mreq;
+	char *message="Hello, World!";
 
-  // memset - fill a byte string with a byte value:
-  memset((char *) &si_other, 0, sizeof(si_other));
+	/* create what looks like an ordinary UDP socket */
+	if ((fd=socket(AF_INET,SOCK_DGRAM,0)) < 0) {
+		perror("socket");
+		exit(1);
+	}
 
-  // AF_INET is the address family for IP:
-  si_other.sin_family = AF_INET;
-  si_other.sin_port = htons(PORT);
+	/* set up destination address */
+	memset(&addr,0,sizeof(addr));
+	addr.sin_family=AF_INET;
+	addr.sin_addr.s_addr=inet_addr(HELLO_GROUP);
+	addr.sin_port=htons(HELLO_PORT);
 
-  // int inet_aton(const char *cp, struct in_addr *inp);
-  // Converts internet host addr cp from IPv4 numbers and dots notation
-  // into binary form (in network byte order), stores it inside the
-  // structure that *inp points to.
-  if (inet_aton(SRV_IP, &si_other.sin_addr)==0) {
-    fprintf(stderr, "inet_aton() failed\n");
-    exit(1);
-  }
-
-  #ifdef DEBUG
-  printf("Sending packet %d\n\n", seq_num);
-  printf("sd_message: %s, sd_user: %s\n", sd_message, sd_user);
-  #endif
-
-  // int sprintf(char * restrict str, const char * restrict format, ...);
-  sprintf(buf, "%d,%d,%s,%s", msgType, sequence, sd_user, sd_message);
+	/* now just sendto() our destination! */
+	while (1) {
+	if (sendto(fd, message, sizeof(message), 0, (struct sockaddr *) &addr, sizeof(addr)) < 0) {
+		perror("sendto");
+		exit(1);
+	}
+		sleep(1);
+	}
 
 
-  // ssize_t sendto(int socket, const void *buffer, size_t length, int flags, 
-  // const struct sockaddr *dest_addr, socklen_t dest_len);
-  if (sendto(s, buf,  BUFLEN, 0, &si_other, slen)==-1) {diep("sendto()");}
-
-  close(s);
 }
 
 
@@ -195,11 +185,15 @@ int *send_1_svc(msg_recv *message, struct svc_req *rqstp) {
 	//printf("before sd user: %s\n", sd_user);
 	
 	// type, sequence, sender, msg
+	/*
 	sendDatagram(
 				msg_buffer[seq_num % MSG_BUF_SIZE].msg_type,
 				msg_buffer[seq_num % MSG_BUF_SIZE].seq_num,
 				msg_buffer[seq_num % MSG_BUF_SIZE].user_sent, 
 				msg_buffer[seq_num % MSG_BUF_SIZE].msg_sent);
+	*/
+
+	sendDatagram();
 
 	// Knock up seq_num by 1:
 	seq_num = seq_num + 1;

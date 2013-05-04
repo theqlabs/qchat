@@ -26,10 +26,11 @@
 #include "qchat.h"
 #include "holdback_queue.h"
 
-//#define NPACK 10
-#define PORT 9930
-
 #define HOLD_Q_SIZE 128
+
+#define HELLO_PORT 12345
+#define HELLO_GROUP "225.0.0.37"
+#define MSGBUFSIZE 256
 
 // If DEBUG is set, various debugging statements
 // are triggered to help debug RPC calls mostly
@@ -78,36 +79,65 @@ void recvDatagram(void) {
       pthread_exit(NULL);
    }
 
-   int expectedSeq = 0;
-  // Create two structs of type sockaddr_in:
-  struct sockaddr_in si_me, si_other;
-  int s, i, slen = sizeof(si_other);
-  char buf[BUFLEN];
+  int expectedSeq = 0;
+  
+  struct sockaddr_in addr;
+  int fd, nbytes,addrlen;
+  struct ip_mreq mreq;
+  char msgbuf[MSGBUFSIZE];
+  u_int yes=1;
 
-  // Attempts to open a socket s, with parameters:
-  if ((s=socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP))==-1) {
-    diep("socket");
+  /* create what looks like an ordinary UDP socket */
+  if ((fd=socket(AF_INET,SOCK_DGRAM,0)) < 0) {
+    perror("socket");
+    exit(1);
   }
 
-  memset((char *) &si_me, 0, sizeof(si_me));
-  si_me.sin_family = AF_INET;
+  /**** MODIFICATION TO ORIGINAL */
+  /* allow multiple sockets to use the same PORT number */
+  if (setsockopt(fd,SOL_SOCKET,SO_REUSEADDR,&yes,sizeof(yes)) < 0) {
+    perror("Reusing ADDR failed");
+    exit(1);
+   }
+  /*** END OF MODIFICATION TO ORIGINAL */
 
-  /// htons - converts unsigned short integer hostshort from host byte order to network byte order
-  si_me.sin_port = htons(PORT);
+  /* set up destination address */
+  memset(&addr,0,sizeof(addr));
+  addr.sin_family=AF_INET;
+  addr.sin_addr.s_addr=htonl(INADDR_ANY); /* N.B.: differs from sender */
+  addr.sin_port=htons(HELLO_PORT);
 
-  // htonl - converts unsigned integer netlong from network byte order to host byte order
-  si_me.sin_addr.s_addr = htonl(INADDR_ANY);
-
-  // Attempts to bind to socket s
-  if (bind(s, &si_me, sizeof(si_me))==-1) {
-    diep("bind");
+  /* bind to receive address */
+  if (bind(fd,(struct sockaddr *) &addr,sizeof(addr)) < 0) {
+    perror("bind");
+    exit(1);
   }
 
-  while(TRUE) {
-    if (recvfrom(s, buf, BUFLEN, 0, &si_other, &slen)==-1) {
-      diep("recvfrom()");
+  /* use setsockopt() to request that the kernel join a multicast group */
+  mreq.imr_multiaddr.s_addr=inet_addr(HELLO_GROUP);
+  mreq.imr_interface.s_addr=htonl(INADDR_ANY);
+
+  if (setsockopt(fd,IPPROTO_IP,IP_ADD_MEMBERSHIP,&mreq,sizeof(mreq)) < 0) {
+    perror("setsockopt");
+    exit(1);
+  }
+
+     /* now just enter a read-print loop */
+    while (1) {
+
+      addrlen=sizeof(addr);
+
+      if ((nbytes=recvfrom(fd,msgbuf,MSGBUFSIZE,0,(struct sockaddr *) &addr,&addrlen)) < 0) {
+         perror("recvfrom");
+         exit(1);
+      }
+
+      puts(msgbuf);
     }
-    //printf("Received packet from %s:%d\nData: %s\n", inet_ntoa(si_other.sin_addr), ntohs(si_other.sin_port), buf);
+
+    /*
+    TEMPORAILY REMOVE THIS HORRIBLE MESS: 
+
     msg_recv* inMsg = malloc(sizeof(msg_recv));
     if(inMsg == NULL) {
       diep("Incoming message allocation failed");
@@ -145,9 +175,9 @@ void recvDatagram(void) {
     }
     expectedSeq++;
     printf("%s: %s\n", (*nextMsg).user_sent, (*nextMsg).msg_sent);
-  }
+  
+  */
 
-  close(s);
 }
 
 /*
@@ -193,10 +223,10 @@ int init_client(char* host) {
 
 int main(int argc, char * argv[]) {
 
-  pid_t pID = fork();
-  if (pID == 0) {
-    execlp("./qchat_svc", NULL, (char *) 0);
-  }
+  //pid_t pID = fork();
+  //if (pID == 0) {
+  //  execlp("./qchat_svc", NULL, (char *) 0);
+  //}
 
   // Join Variables:
   cname  userdata;
@@ -242,7 +272,7 @@ int main(int argc, char * argv[]) {
   if (argc == 3) {
     //Joining an existing chat
     char *remoteHostname = argv[2];
-    printf("%s joining an existing chat on %s, listening on %s:%d\n", argv[1], remoteHostname, localHostname, PORT);
+    printf("%s joining an existing chat on %s, listening on %s:%d\n", argv[1], remoteHostname, localHostname, HELLO_PORT);
     // create client handle, check health:
     int isClientAlive = init_client(localHostname);
     if (isClientAlive == 1) {
@@ -258,7 +288,7 @@ int main(int argc, char * argv[]) {
     }
   } else {
     //Creating a new chat
-    printf("%s started a new chat, listening on %s:%d\n", argv[1], localHostname, PORT);
+    printf("%s started a new chat, listening on %s:%d\n", argv[1], localHostname, HELLO_PORT);
     isSequencer = 1;
     int isClientAlive = init_client(localHostname);
     if (isClientAlive == 1) {
@@ -270,7 +300,7 @@ int main(int argc, char * argv[]) {
 
   userdata.userName = (uname) argv[1];
   userdata.hostname = (hoststr) localHostname;
-  userdata.lport = PORT;
+  userdata.lport = HELLO_PORT;
   userdata.leader_flag = isSequencer;
 
   // Call to join_1:
