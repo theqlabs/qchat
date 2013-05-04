@@ -41,7 +41,6 @@ void getLocalIp(char*);
 void holdElection();
 
 // Constants, Scope: Global
-const int LOCALPORT = 10001;
 const int PORTSTRLEN = 6;
 const int HEARTBEAT_DELAY = 3000;
 int isSequencer = 0;
@@ -79,6 +78,7 @@ void recvDatagram(void) {
       pthread_exit(NULL);
    }
 
+   int expectedSeq = 0;
   // Create two structs of type sockaddr_in:
   struct sockaddr_in si_me, si_other;
   int s, i, slen = sizeof(si_other);
@@ -107,10 +107,44 @@ void recvDatagram(void) {
     if (recvfrom(s, buf, BUFLEN, 0, &si_other, &slen)==-1) {
       diep("recvfrom()");
     }
-    printf("Received packet from %s:%d\nData: %s\n", inet_ntoa(si_other.sin_addr), ntohs(si_other.sin_port), buf);
-    printf("MsgType: %s\n", buf);
-    printf("SeqNum: %s\n", buf[2]);
-    printf("Username: %s\n", buf[12]);
+    //printf("Received packet from %s:%d\nData: %s\n", inet_ntoa(si_other.sin_addr), ntohs(si_other.sin_port), buf);
+    msg_recv* inMsg = malloc(sizeof(msg_recv));
+    if(inMsg == NULL) {
+      diep("Incoming message allocation failed");
+    }
+    int token = strcspn(buf, ",");
+    if(token > 1) {
+      diep("Malformed incoming message at first token");
+    }
+    buf[token] = '\0';
+    (*inMsg).msg_type = (unsigned int) strtoul(&(buf[0]), NULL, 10);
+    int nextToken = strcspn(&(buf[++token]), ",");
+    if(nextToken > 10) {
+      diep("Malformed incoming message at second token");
+    }
+    buf[token + nextToken] = '\0';
+    (*inMsg).seq_num = (unsigned int) strtoul(&(buf[token]), NULL, 10);
+    token = token+nextToken + 1;
+    nextToken = strcspn(&(buf[token]), ",");
+    if(nextToken > 32) {
+      diep("Malformed incoming message at third token");
+    }
+    buf[token + nextToken] = '\0';
+    (*inMsg).user_sent = strdup(&(buf[token]));
+    token = token+nextToken + 1;
+    buf[BUFLEN-1] = '\0';
+    (*inMsg).msg_sent = strdup(&(buf[token]));
+    hq_push(queue, inMsg);
+    msg_recv* nextMsg = hq_pop(queue);
+    if(nextMsg == NULL) {
+      printf("No messages in the message queue\n");
+    }
+    if((*nextMsg).seq_num != expectedSeq) {
+      printf("Received: %d, expected: %d\n", (*nextMsg).seq_num, expectedSeq);
+      //IN HERE IS WHERE WE DO THE MESSAGE REDELIVERY REQUESTING AND PRINT THEM OUT
+    }
+    expectedSeq++;
+    printf("%s: %s\n", (*nextMsg).user_sent, (*nextMsg).msg_sent);
   }
 
   close(s);
@@ -208,7 +242,7 @@ int main(int argc, char * argv[]) {
   if (argc == 3) {
     //Joining an existing chat
     char *remoteHostname = argv[2];
-    printf("%s joining an existing chat on %s, listening on %s:%d\n", argv[1], remoteHostname, localHostname, LOCALPORT);
+    printf("%s joining an existing chat on %s, listening on %s:%d\n", argv[1], remoteHostname, localHostname, PORT);
     // create client handle, check health:
     int isClientAlive = init_client(localHostname);
     if (isClientAlive == 1) {
@@ -222,10 +256,9 @@ int main(int argc, char * argv[]) {
       printf("Sorry, no chat is active on %s, try again later.\nBye.\n", remoteHostname);
       return 1;
     }
-
   } else {
     //Creating a new chat
-    printf("%s started a new chat, listening on %s:%d\n", argv[1], localHostname, LOCALPORT);
+    printf("%s started a new chat, listening on %s:%d\n", argv[1], localHostname, PORT);
     isSequencer = 1;
     int isClientAlive = init_client(localHostname);
     if (isClientAlive == 1) {
@@ -237,14 +270,12 @@ int main(int argc, char * argv[]) {
 
   userdata.userName = (uname) argv[1];
   userdata.hostname = (hoststr) localHostname;
-  userdata.lport = LOCALPORT;
+  userdata.lport = PORT;
   userdata.leader_flag = isSequencer;
 
   // Call to join_1:
   int* joinResult = join_1(&userdata, clnt);
   if (joinResult == NULL) {
-  result_join = join_1(&userdata, clnt);
-  if (result_join == NULL) {
     clnt_perror(clnt, "RPC request to join chat failed");
   } else if (joinResult == UNAMEINUSE) {
     printf("Sorry, there is another user in the chat with that username. Please try again.\n");
@@ -252,7 +283,7 @@ int main(int argc, char * argv[]) {
   } else if (joinResult == UNAMEINVALID) {
     printf("Sorry, username is not valid. Only alphanumeric characters are allowed in chat usernames.\nPlease try again.\n");
     return 1;
-  } else if (joinResult == FAILURE) {
+  } else if (joinResult == JFAILURE) {
     printf("Joining the specified chat failed. Please try again later.\n");
     return 1;
   }
@@ -279,8 +310,7 @@ int main(int argc, char * argv[]) {
   while (read(0, inputmsg, MAX_MSG_LEN) > 0) {
 
       inputmsg[MAX_MSG_LEN-1]='\0';
-      inputmsg[strlen(inputmsg)] = '\0';
-
+      inputmsg[strlen(inputmsg)-1] = '\0';
       msg.msg_sent = (msg_send) strdup(inputmsg);
       msg.user_sent = userdata.userName;
       msg.msg_type = TEXT;
