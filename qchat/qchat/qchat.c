@@ -270,7 +270,7 @@ int main(int argc, char * argv[]) {
     char *remoteHostname = argv[2];
     printf("%s joining an existing chat on %s, listening on %s:%d\n", argv[1], remoteHostname, localHostname, HELLO_PORT);
     // create client handle, check health:
-    int isClientAlive = init_client(localHostname);
+    int isClientAlive = init_client(remoteHostname);
     if (isClientAlive == 1) {
       clnt_pcreateerror(localHostname);
       printf("Unable to activate a new chat on %s, try again later.\n", localHostname);

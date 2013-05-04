@@ -167,7 +167,7 @@ int *send_1_svc(msg_recv *message, struct svc_req *rqstp) {
 	msg_buffer[seq_num % MSG_BUF_SIZE].msg_type = message->msg_type;
 
 	#ifdef DEBUG
-	printf("msg_sent: %s", msg_buffer[seq_num % MSG_BUF_SIZE].msg_sent);
+	printf("msg_sent: %s\n", msg_buffer[seq_num % MSG_BUF_SIZE].msg_sent);
 	printf("user_sent: %s\n", msg_buffer[seq_num % MSG_BUF_SIZE].user_sent);
 	printf("seq: %d\n", seq_num);
 	printf("msg_type: %d\n", msg_buffer[seq_num % MSG_BUF_SIZE].msg_type);
