@@ -121,7 +121,7 @@ void sendDatagram(msg_type_t msgType, uint32_t sequence, uname sd_user, msg_send
 		perror("sendto");
 		exit(1);
 	}
-	close(fd);
+	//close(fd);
 }
 
 

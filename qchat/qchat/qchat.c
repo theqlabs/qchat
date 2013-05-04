@@ -173,7 +173,7 @@ void recvDatagram(void) {
     expectedSeq++;
     printf("%s: %s\n", (*nextMsg).user_sent, (*nextMsg).msg_sent);
   }
-  close(fd);
+  //close(fd);
 }
 
 /*
