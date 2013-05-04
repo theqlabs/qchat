@@ -72,69 +72,7 @@ void diep(char *s) {
   exit(1);
 }
 
-// Receives UDP packet:
-void recvDatagram(void) {
-
-  if (signal(SIGTERM, sig_handler) == SIG_ERR) {
-      fputs("Error occurred setting a SIGTERM handler.\n", stderr);
-      pthread_exit(NULL);
-   }
-
-  int expectedSeq = 0;
-  
-  struct sockaddr_in addr;
-  int fd, nbytes,addrlen;
-  struct ip_mreq mreq;
-  char msgbuf[MSGBUFSIZE];
-  u_int yes=1;
-
-  /* create what looks like an ordinary UDP socket */
-  if ((fd=socket(AF_INET,SOCK_DGRAM,0)) < 0) {
-    perror("socket");
-    exit(1);
-  }
-
-  /**** MODIFICATION TO ORIGINAL */
-  /* allow multiple sockets to use the same PORT number */
-  if (setsockopt(fd,SOL_SOCKET,SO_REUSEADDR,&yes,sizeof(yes)) < 0) {
-    perror("Reusing ADDR failed");
-    exit(1);
-   }
-  /*** END OF MODIFICATION TO ORIGINAL */
-
-  /* set up destination address */
-  memset(&addr,0,sizeof(addr));
-  addr.sin_family=AF_INET;
-  addr.sin_addr.s_addr=htonl(INADDR_ANY); /* N.B.: differs from sender */
-  addr.sin_port=htons(HELLO_PORT);
-
-  /* bind to receive address */
-  if (bind(fd,(struct sockaddr *) &addr,sizeof(addr)) < 0) {
-    perror("bind");
-    exit(1);
-  }
-
-  /* use setsockopt() to request that the kernel join a multicast group */
-  mreq.imr_multiaddr.s_addr=inet_addr(HELLO_GROUP);
-  mreq.imr_interface.s_addr=htonl(INADDR_ANY);
-
-  if (setsockopt(fd,IPPROTO_IP,IP_ADD_MEMBERSHIP,&mreq,sizeof(mreq)) < 0) {
-    perror("setsockopt");
-    exit(1);
-  }
-
-     /* now just enter a read-print loop */
-    while (1) {
-
-      addrlen=sizeof(addr);
-
-      if ((nbytes=recvfrom(fd,buf,MSGBUFSIZE,0,(struct sockaddr *) &addr,&addrlen)) < 0) {
-         perror("recvfrom");
-         exit(1);
-      }
-      //puts(msgbuf);
-
-
+msg_recv* parseMessage(char * buf) {
     msg_recv* inMsg = malloc(sizeof(msg_recv));
     if(inMsg == NULL) {
       diep("Incoming message allocation failed");
@@ -161,17 +99,86 @@ void recvDatagram(void) {
     token = token+nextToken + 1;
     buf[BUFLEN-1] = '\0';
     (*inMsg).msg_sent = strdup(&(buf[token]));
+    return inMsg;
+}
+
+// Receives UDP packet:
+void recvDatagram(void) {
+
+  if (signal(SIGTERM, sig_handler) == SIG_ERR) {
+      fputs("Error occurred setting a SIGTERM handler.\n", stderr);
+      pthread_exit(NULL);
+   }
+
+  int expectedSeq = -1;
+
+  struct sockaddr_in addr;
+  int fd, nbytes,addrlen;
+  struct ip_mreq mreq;
+  u_int yes=1;
+
+  /* create what looks like an ordinary UDP socket */
+  if ((fd=socket(AF_INET,SOCK_DGRAM,0)) < 0) {
+    perror("socket");
+    exit(1);
+  }
+
+  /* allow multiple sockets to use the same PORT number */
+  if (setsockopt(fd,SOL_SOCKET,SO_REUSEADDR,&yes,sizeof(yes)) < 0) {
+    perror("Reusing ADDR failed");
+    exit(1);
+   }
+
+  /* set up destination address */
+  memset(&addr,0,sizeof(addr));
+  addr.sin_family=AF_INET;
+  addr.sin_addr.s_addr=htonl(INADDR_ANY); /* N.B.: differs from sender */
+  addr.sin_port=htons(HELLO_PORT);
+
+  /* bind to receive address */
+  if (bind(fd,(struct sockaddr *) &addr,sizeof(addr)) < 0) {
+    perror("bind");
+    exit(1);
+  }
+
+  /* use setsockopt() to request that the kernel join a multicast group */
+  mreq.imr_multiaddr.s_addr=inet_addr(HELLO_GROUP);
+  mreq.imr_interface.s_addr=htonl(INADDR_ANY);
+
+  if (setsockopt(fd,IPPROTO_IP,IP_ADD_MEMBERSHIP,&mreq,sizeof(mreq)) < 0) {
+    perror("setsockopt");
+    exit(1);
+  }
+
+     /* now just enter a read-print loop */
+  while (1) {
+
+      addrlen=sizeof(addr);
+
+      if ((nbytes=recvfrom(fd,buf,MSGBUFSIZE,0,(struct sockaddr *) &addr,&addrlen)) < 0) {
+         perror("recvfrom");
+         exit(1);
+      }
+
+    msg_recv* inMsg = parseMessage(&buf);
     hq_push(queue, inMsg);
     msg_recv* nextMsg = hq_pop(queue);
     if(nextMsg == NULL) {
       printf("No messages in the message queue\n");
     }
-    if((*nextMsg).seq_num != expectedSeq) {
-      printf("Received: %d, expected: %d\n", (*nextMsg).seq_num, expectedSeq);
-      //IN HERE IS WHERE WE DO THE MESSAGE REDELIVERY REQUESTING AND PRINT THEM OUT
+    if(expectedSeq == -1) {
+      expectedSeq = (*nextMsg).seq_num;
+    } else if((*nextMsg).seq_num != expectedSeq) {
+      int toRedeliver = (*nextMsg).seq_num ++;
+      while (toRedeliver <= expectedSeq) {
+        nextMsg = redeliver_1(toRedeliver);
+        printf("%s: %s\n", (*nextMsg).user_sent, (*nextMsg).msg_sent);
+        toRedeliver++;
+      }
     }
     expectedSeq++;
     printf("%s: %s\n", (*nextMsg).user_sent, (*nextMsg).msg_sent);
+    free(nextMsg);
   }
   //close(fd);
 }
