@@ -88,7 +88,7 @@ void diep(char *s) {
 }
 
 // Sends UDP packet:
-void sendDatagram() {
+void sendDatagram(msg_send mcmsg) {
 
 	//struct ip_mreq {
 	//    struct in_addr imr_multiaddr; /* multicast group to join */
@@ -98,7 +98,7 @@ void sendDatagram() {
 	struct sockaddr_in addr;
 	int fd, cnt;
 	struct ip_mreq mreq;
-	char *message="Hello, World!";
+	//char *message="Hello, World!";
 
 	/* create what looks like an ordinary UDP socket */
 	if ((fd=socket(AF_INET,SOCK_DGRAM,0)) < 0) {
@@ -113,14 +113,10 @@ void sendDatagram() {
 	addr.sin_port=htons(HELLO_PORT);
 
 	/* now just sendto() our destination! */
-	while (1) {
-	if (sendto(fd, message, sizeof(message), 0, (struct sockaddr *) &addr, sizeof(addr)) < 0) {
+	if (sendto(fd, mcmsg, sizeof(mcmsg), 0, (struct sockaddr *) &addr, sizeof(addr)) < 0) {
 		perror("sendto");
 		exit(1);
 	}
-		sleep(1);
-	}
-
 
 }
 
@@ -193,7 +189,7 @@ int *send_1_svc(msg_recv *message, struct svc_req *rqstp) {
 				msg_buffer[seq_num % MSG_BUF_SIZE].msg_sent);
 	*/
 
-	sendDatagram();
+	sendDatagram(msg_buffer[seq_num % MSG_BUF_SIZE].msg_sent);
 
 	// Knock up seq_num by 1:
 	seq_num = seq_num + 1;
