@@ -127,16 +127,11 @@ void recvDatagram(void) {
 
       addrlen=sizeof(addr);
 
-      if ((nbytes=recvfrom(fd,msgbuf,MSGBUFSIZE,0,(struct sockaddr *) &addr,&addrlen)) < 0) {
+      if ((nbytes=recvfrom(fd,buf,MSGBUFSIZE,0,(struct sockaddr *) &addr,&addrlen)) < 0) {
          perror("recvfrom");
          exit(1);
       }
-
-      puts(msgbuf);
-    }
-
-    /*
-    TEMPORAILY REMOVE THIS HORRIBLE MESS: 
+      //puts(msgbuf);
 
     msg_recv* inMsg = malloc(sizeof(msg_recv));
     if(inMsg == NULL) {
@@ -175,8 +170,7 @@ void recvDatagram(void) {
     }
     expectedSeq++;
     printf("%s: %s\n", (*nextMsg).user_sent, (*nextMsg).msg_sent);
-  
-  */
+  }
 
 }
 

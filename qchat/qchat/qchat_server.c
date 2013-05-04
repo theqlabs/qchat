@@ -88,7 +88,7 @@ void diep(char *s) {
 }
 
 // Sends UDP packet:
-void sendDatagram(msg_send mcmsg) {
+void sendDatagram(msg_type_t msgType, uint32_t sequence, uname sd_user, msg_send sd_message) {
 
 	//struct ip_mreq {
 	//    struct in_addr imr_multiaddr; /* multicast group to join */
@@ -112,8 +112,11 @@ void sendDatagram(msg_send mcmsg) {
 	addr.sin_addr.s_addr=inet_addr(HELLO_GROUP);
 	addr.sin_port=htons(HELLO_PORT);
 
+	// int sprintf(char * restrict str, const char * restrict format, ...);
+	sprintf(buf, "%d,%d,%s,%s", msgType, sequence, sd_user, sd_message);
+
 	/* now just sendto() our destination! */
-	if (sendto(fd, mcmsg, sizeof(mcmsg), 0, (struct sockaddr *) &addr, sizeof(addr)) < 0) {
+	if (sendto(fd, buf, sizeof(buf), 0, (struct sockaddr *) &addr, sizeof(addr)) < 0) {
 		perror("sendto");
 		exit(1);
 	}
@@ -181,15 +184,11 @@ int *send_1_svc(msg_recv *message, struct svc_req *rqstp) {
 	//printf("before sd user: %s\n", sd_user);
 	
 	// type, sequence, sender, msg
-	/*
 	sendDatagram(
 				msg_buffer[seq_num % MSG_BUF_SIZE].msg_type,
 				msg_buffer[seq_num % MSG_BUF_SIZE].seq_num,
 				msg_buffer[seq_num % MSG_BUF_SIZE].user_sent, 
 				msg_buffer[seq_num % MSG_BUF_SIZE].msg_sent);
-	*/
-
-	sendDatagram(msg_buffer[seq_num % MSG_BUF_SIZE].msg_sent);
 
 	// Knock up seq_num by 1:
 	seq_num = seq_num + 1;
