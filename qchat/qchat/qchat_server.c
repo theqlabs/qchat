@@ -201,9 +201,10 @@ int *send_1_svc(msg_recv *message, struct svc_req *rqstp) {
 msg_recv *redeliver_1_svc(u_int * seq_num, struct svc_req *rqstp) {
 
 	// requests a specific packet from msg_buffer and returns it
-	&(msg_buffer[seq_num % MSG_BUF_SIZE]);
+	//&(msg_buffer[seq_num % MSG_BUF_SIZE]);
 
-	return &(msg_buffer[seq_num % MSG_BUF_SIZE]);
+	return &(msg_buffer[*seq_num % MSG_BUF_SIZE]);
+
 }
 
 int *exit_1_svc(msg_recv *argp, struct svc_req *rqstp) {
