@@ -238,6 +238,10 @@ int *send_1_svc(msg_recv *message, struct svc_req *rqstp) {
 	if (!initialized) {
 		init_data_structures();
 	}
+ 	
+	if (message->msg_sent[0] == EOF) {
+		return(NULL);
+	}
 
 	// Move message into msg_buffer
 	//printf("before: %d\n", seq_num);
