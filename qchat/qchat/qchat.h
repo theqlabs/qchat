@@ -145,8 +145,8 @@ extern "C" int * join_1_svc(cname *, struct svc_req *);
 extern "C" int * send_1(msg_recv *, CLIENT *);
 extern "C" int * send_1_svc(msg_recv *, struct svc_req *);
 #define EXIT ((rpc_uint)3)
-extern "C" int * exit_1(void *, CLIENT *);
-extern "C" int * exit_1_svc(void *, struct svc_req *);
+extern "C" int * exit_1(uname *, CLIENT *);
+extern "C" int * exit_1_svc(uname *, struct svc_req *);
 #define REDELIVER ((rpc_uint)4)
 extern "C" msg_recv * redeliver_1(u_int *, CLIENT *);
 extern "C" msg_recv * redeliver_1_svc(u_int *, struct svc_req *);
@@ -165,8 +165,8 @@ extern  int * join_1_svc(cname *, struct svc_req *);
 extern  int * send_1(msg_recv *, CLIENT *);
 extern  int * send_1_svc(msg_recv *, struct svc_req *);
 #define EXIT ((rpc_uint)3)
-extern  int * exit_1(void *, CLIENT *);
-extern  int * exit_1_svc(void *, struct svc_req *);
+extern  int * exit_1(uname *, CLIENT *);
+extern  int * exit_1_svc(uname *, struct svc_req *);
 #define REDELIVER ((rpc_uint)4)
 extern  msg_recv * redeliver_1(u_int *, CLIENT *);
 extern  msg_recv * redeliver_1_svc(u_int *, struct svc_req *);

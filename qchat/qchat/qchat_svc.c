@@ -73,6 +73,7 @@ qchat_1(rqstp, transp)
 	union {
 		cname join_1_arg;
 		msg_recv send_1_arg;
+		uname exit_1_arg;
 		u_int redeliver_1_arg;
 		u_int heartbeat_1_arg;
 	} argument;
@@ -100,7 +101,7 @@ qchat_1(rqstp, transp)
 		break;
 
 	case EXIT:
-		xdr_argument = xdr_void;
+		xdr_argument = xdr_uname;
 		xdr_result = xdr_int;
 		local = (char *(*)()) exit_1_svc;
 		break;
