@@ -173,6 +173,7 @@ void recvDatagram(void) {
       //int toRedeliver = 0;
       int toRedeliver = (*nextMsg).seq_num ++;
       while (toRedeliver <= expectedSeq) {
+        printf("redelivering!");
         nextMsg = redeliver_1(&toRedeliver, clnt);
         printf("%s: %s\n", (*nextMsg).user_sent, (*nextMsg).msg_sent);
         toRedeliver++;
