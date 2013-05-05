@@ -143,7 +143,17 @@ msg_recv* parseMessage(char * buf) {
       buf[token + nextToken] = '\0';
       uname* userExited = (uname) strdup(&(buf[token]));
       printf("%s has left the chat.", userExited);
-
+      int i;
+      for (i=0; i<clientlist->clientlist.clientlist_len; i++) {
+        if(strcmp(userExited, clientlist->clientlist.clientlist_val[i].userName) == 0) {
+          if(i<(clientlist->clientlist.clientlist_len-1)) {
+            memmove(&(clientlist->clientlist.clientlist_val[i]),
+                &(clientlist->clientlist.clientlist_val[i+1]),
+                sizeof(cname)*clientlist->clientlist.clientlist_len-1-i);
+            break;
+          }
+        }
+      }
 
     }
 }
