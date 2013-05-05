@@ -218,7 +218,8 @@ void recvDatagram(void) {
     }
     expectedSeq++;
     printf("%s: %s\n", (*nextMsg).user_sent, (*nextMsg).msg_sent);
-    free(nextMsg);
+    //if (nextMsg != NULL)
+    //free(nextMsg);
   }
   //close(fd);
 }
