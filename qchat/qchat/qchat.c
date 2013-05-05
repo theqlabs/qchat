@@ -444,7 +444,9 @@ int main(int argc, char * argv[]) {
       msg.msg_sent = (msg_send) strdup(inputmsg);
       msg.user_sent = userdata.userName;
       msg.msg_type = TEXT;
-
+      if(inputmsg[0] == EOF) {
+        break;
+      }
       // Calls the send_1 RPC:
       int* result_send = send_1(&msg, clnt);
       if (result_send == NULL) {
