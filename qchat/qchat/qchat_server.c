@@ -135,6 +135,7 @@ void mcClients(uname userName, hoststr hostname, int lport, int leader_flag) {
 	int fd, cnt;
 	struct ip_mreq mreq;
 
+
 	/* create what looks like an ordinary UDP socket */
 	if ((fd=socket(AF_INET,SOCK_DGRAM,0)) < 0) {
 		perror("socket");
@@ -148,7 +149,7 @@ void mcClients(uname userName, hoststr hostname, int lport, int leader_flag) {
 	addr.sin_port=htons(HELLO_PORT);
 
 	// int sprintf(char * restrict str, const char * restrict format, ...);
-	sprintf(buf, "%s,%s,%d,%d", userName, hostname, lport, leader_flag);
+	sprintf(buf, "%d,%s,%s,%d,%d", NEWUSER, userName, hostname, lport, leader_flag);
 
 	/* now just sendto() our destination! */
 	if (sendto(fd, buf, sizeof(buf), 0, (struct sockaddr *) &addr, sizeof(addr)) < 0) {
