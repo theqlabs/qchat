@@ -135,6 +135,8 @@ msg_recv* parseMessage(char * buf) {
       printf("%s joined the chat!\n", &(newUser->userName)[0]);
       clientlist->clientlist.clientlist_len++;
       return NULL;
+    } else if ((*inMsg).msg_type == NEWUSER) {
+
     }
 }
 
