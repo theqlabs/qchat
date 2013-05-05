@@ -466,6 +466,9 @@ int main(int argc, char * argv[]) {
 
   exit_1(&(userdata.userName), clnt);
 
+  // SHOULD KILL QCHAT_SVC PROCESS:
+  kill(pID, SIGTERM);
+
   //Terminate RPC process
   if(clnt != NULL) {
     // if(userdata.leader_flag == 1) {
