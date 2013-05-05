@@ -190,10 +190,6 @@ void recvDatagram(void) {
     if(nextMsg == NULL) {
       printf("No messages in the message queue\n");
     }
-<<<<<<< HEAD
-=======
-
->>>>>>> 55c7f4930b2e00e7a7f983b13615671ed8c3f6c8
     if(expectedSeq == -1) {
       expectedSeq = (*nextMsg).seq_num;
     } else if((*nextMsg).seq_num > expectedSeq) {
