@@ -89,7 +89,7 @@ void diep(char *s) {
 }
 
 // Sends UDP packet:
-void sendDatagram(msg_type_t msgType, uint32_t sequence, uname sd_user, msg_send sd_message) {
+void mcMessage(msg_type_t msgType, uint32_t sequence, uname sd_user, msg_send sd_message) {
 
 	//struct ip_mreq {
 	//    struct in_addr imr_multiaddr; /* multicast group to join */
@@ -124,12 +124,46 @@ void sendDatagram(msg_type_t msgType, uint32_t sequence, uname sd_user, msg_send
 	//close(fd);
 }
 
+void mcClients(uname userName, hoststr hostname, int lport, int leader_flag) {
+
+	//struct ip_mreq {
+	//    struct in_addr imr_multiaddr; /* multicast group to join */
+	//    struct in_addr imr_interface; /* interface to join on */
+	//}
+
+	struct sockaddr_in addr;
+	int fd, cnt;
+	struct ip_mreq mreq;
+
+	/* create what looks like an ordinary UDP socket */
+	if ((fd=socket(AF_INET,SOCK_DGRAM,0)) < 0) {
+		perror("socket");
+		exit(1);
+	}
+
+	/* set up destination address */
+	memset(&addr,0,sizeof(addr));
+	addr.sin_family=AF_INET;
+	addr.sin_addr.s_addr=inet_addr(HELLO_GROUP);
+	addr.sin_port=htons(HELLO_PORT);
+
+	// int sprintf(char * restrict str, const char * restrict format, ...);
+	sprintf(buf, "%s,%s,%d,%d", userName, hostname, lport, leader_flag);
+
+	/* now just sendto() our destination! */
+	if (sendto(fd, buf, sizeof(buf), 0, (struct sockaddr *) &addr, sizeof(addr)) < 0) {
+		perror("sendto");
+		exit(1);
+	}
+	//close(fd);
+}
 
 int *join_1_svc(cname *userdata, struct svc_req *rqstp) {
 
+	int unameErr;
+	status_code status;
+
 	// Add to clientlist
-	// return current clientlist
-	// multicast new member msg, seq#
 
 	// Validate username, if it exists error
 
@@ -138,12 +172,30 @@ int *join_1_svc(cname *userdata, struct svc_req *rqstp) {
 		init_data_structures();
 	}
 	
-	clients->clientlist.clientlist_val[clients->clientlist.clientlist_len].userName = (uname) strdup(userdata->userName);
+	// if username returns with an error, set status code to UNAMEINUSE=2:
+	clients->clientlist.clientlist_val[clients->clientlist.clientlist_len].userName = (uname) strdup(userdata->userName);	
+
+	if (clients->clientlist.clientlist_val[clients->clientlist.clientlist_len].userName == NULL) {
+		status = 2;
+	}
+
 	clients->clientlist.clientlist_val[clients->clientlist.clientlist_len].hostname = (hoststr) strdup(userdata->hostname);
 	clients->clientlist.clientlist_val[clients->clientlist.clientlist_len].lport = userdata->lport;
-  	clients->clientlist.clientlist_val[clients->clientlist.clientlist_len].leader_flag = userdata->leader_flag;
+  clients->clientlist.clientlist_val[clients->clientlist.clientlist_len].leader_flag = userdata->leader_flag;
+	clients->clientlist.clientlist_len++;
 
-  	clients->clientlist.clientlist_len++;
+	// if clients struct is empty, then JFAILURE, status_code = 1:
+	if (clients == NULL) {
+		status = 1;
+	}
+
+  // Multicast client list
+  // set message type to NEWUSER=1
+  mcClients(
+  			clients->clientlist.clientlist_val[clients->clientlist.clientlist_len].userName,
+  			clients->clientlist.clientlist_val[clients->clientlist.clientlist_len].hostname,
+  			clients->clientlist.clientlist_val[clients->clientlist.clientlist_len].lport,
+  			clients->clientlist.clientlist_val[clients->clientlist.clientlist_len].leader_flag); 
 
 	return(clients);
 }
@@ -185,7 +237,7 @@ int *send_1_svc(msg_recv *message, struct svc_req *rqstp) {
 	//printf("before sd user: %s\n", sd_user);
 	
 	// type, sequence, sender, msg
-	sendDatagram(
+	mcMessage(
 				msg_buffer[seq_num % MSG_BUF_SIZE].msg_type,
 				msg_buffer[seq_num % MSG_BUF_SIZE].seq_num,
 				msg_buffer[seq_num % MSG_BUF_SIZE].user_sent, 
@@ -201,9 +253,10 @@ int *send_1_svc(msg_recv *message, struct svc_req *rqstp) {
 msg_recv *redeliver_1_svc(u_int * seq_num, struct svc_req *rqstp) {
 
 	// requests a specific packet from msg_buffer and returns it
-	&(msg_buffer[seq_num % MSG_BUF_SIZE]);
+	//&(msg_buffer[seq_num % MSG_BUF_SIZE]);
 
-	return &(msg_buffer[seq_num % MSG_BUF_SIZE]);
+	return &(msg_buffer[*seq_num % MSG_BUF_SIZE]);
+
 }
 
 int *exit_1_svc(msg_recv *argp, struct svc_req *rqstp) {
@@ -239,4 +292,17 @@ void *shutdownserv_1_svc(void *rpc, struct svc_req *rqstp) {
   exit(0);
   return NULL;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
 
