@@ -48,6 +48,7 @@ int isSequencer = 0;
 int32_t alloc_clients_size;
 CLIENT *clnt;
 clist *clientlist;
+cname  userdata;
 HoldbackQueue *queue;
 char buf[BUFLEN];
 
@@ -269,6 +270,18 @@ void* electionHandler() {
 }
 */
 
+void sigquit_handler(int signal) {
+  printf("Signal caught! %d\n", signal);
+  if(signal == SIGQUIT) {
+    //Fix shutdown procedure when ctrl-c is pressed
+  // pthread_attr_destroy(&attr);
+  // pthread_kill(handlerThread, SIGTERM);
+  //pthread_kill(electionThread, SIGTERM);
+  printf("Signal caught!\n");
+  exit_1(&(userdata.userName), clnt);
+  }
+}
+
 int init_client(char* host) {
 
   // If clnt handle already exists, destroy:
@@ -292,9 +305,8 @@ int main(int argc, char * argv[]) {
   if (pID == 0) {
     execlp("./qchat_svc", NULL, (char *) 0);
   }
-  sleep(2);
-  // Join Variables:
-  cname  userdata;
+  sleep(3);
+
 
   // Send Variables:
   int *result_send;
@@ -391,6 +403,11 @@ int main(int argc, char * argv[]) {
   pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
   pthread_create(&handlerThread, &attr, recvDatagram, NULL);
 
+  struct sigaction act;
+  act.sa_handler = sigquit_handler;
+  sigemptyset(&act.sa_mask);
+  act.sa_flags = 0;
+  sigaction(SIGQUIT, &act, 0);
 
   // Call to join_1:
   int* joinResult = join_1(&userdata, clnt);
