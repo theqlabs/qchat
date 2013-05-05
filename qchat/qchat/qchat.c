@@ -166,16 +166,15 @@ void recvDatagram(void) {
     if(nextMsg == NULL) {
       printf("No messages in the message queue\n");
     }
-
-     if(expectedSeq == -1) {
-       expectedSeq = (*nextMsg).seq_num;
-     } else if((*nextMsg).seq_num != expectedSeq) {
-      //int toRedeliver = 0;
-      int toRedeliver = (*nextMsg).seq_num ++;
-      while (toRedeliver <= expectedSeq) {
-        nextMsg = redeliver_1(&toRedeliver, clnt);
+    if(expectedSeq == -1) {
+      expectedSeq = (*nextMsg).seq_num;
+    } else if((*nextMsg).seq_num > expectedSeq) {
+      int targetMsg = (*nextMsg).seq_num;
+      expectedSeq++;
+      while (expectedSeq < targetMsg) {
+        nextMsg = redeliver_1(&expectedSeq, clnt);
         printf("%s: %s\n", (*nextMsg).user_sent, (*nextMsg).msg_sent);
-        toRedeliver++;
+        expectedSeq++;
       }
     }
     expectedSeq++;
@@ -369,6 +368,8 @@ int main(int argc, char * argv[]) {
   pthread_kill(handlerThread, SIGTERM);
   //pthread_kill(electionThread, SIGTERM);
 
+  exit_1(clnt);
+
   //Terminate RPC process
   if(clnt != NULL) {
     if(userdata.leader_flag == 1) {
@@ -428,9 +429,7 @@ void getLocalIp(char* buf) {
 
 void print_client_list(clist * client_list) {
 
-
   int numClients = client_list->clientlist.clientlist_len, i;
-
   for (i=0 ; i < numClients; i++) {
     printf("%s %s:%d", client_list->clientlist.clientlist_val[i].userName,
                        client_list->clientlist.clientlist_val[i].hostname,
