@@ -31,7 +31,7 @@
 // Global pointer to clist, ptr needed bc of unknown size
 clist *clients;
 msg_recv *msg_buffer;
-char buf[BUFLEN]; 
+char buf[BUFLEN];
 
 int32_t initialized = FALSE;
 int32_t alloc_clients_size;
@@ -82,7 +82,7 @@ void destroy_data_structures() {
   }
 }
 
-// Errors, printing value of s: 
+// Errors, printing value of s:
 void diep(char *s) {
   perror(s);
   exit(1);
@@ -172,9 +172,9 @@ int *join_1_svc(cname *userdata, struct svc_req *rqstp) {
 	if (!initialized) {
 		init_data_structures();
 	}
-	
+
 	// if username returns with an error, set status code to UNAMEINUSE=2:
-	clients->clientlist.clientlist_val[clients->clientlist.clientlist_len].userName = (uname) strdup(userdata->userName);	
+	clients->clientlist.clientlist_val[clients->clientlist.clientlist_len].userName = (uname) strdup(userdata->userName);
 
 	if (clients->clientlist.clientlist_val[clients->clientlist.clientlist_len].userName == NULL) {
 		status = 2;
@@ -183,7 +183,7 @@ int *join_1_svc(cname *userdata, struct svc_req *rqstp) {
 	clients->clientlist.clientlist_val[clients->clientlist.clientlist_len].hostname = (hoststr) strdup(userdata->hostname);
 	clients->clientlist.clientlist_val[clients->clientlist.clientlist_len].lport = userdata->lport;
   clients->clientlist.clientlist_val[clients->clientlist.clientlist_len].leader_flag = userdata->leader_flag;
-	clients->clientlist.clientlist_len++;
+
 
 	// if clients struct is empty, then JFAILURE, status_code = 1:
 	if (clients == NULL) {
@@ -196,8 +196,8 @@ int *join_1_svc(cname *userdata, struct svc_req *rqstp) {
   			clients->clientlist.clientlist_val[clients->clientlist.clientlist_len].userName,
   			clients->clientlist.clientlist_val[clients->clientlist.clientlist_len].hostname,
   			clients->clientlist.clientlist_val[clients->clientlist.clientlist_len].lport,
-  			clients->clientlist.clientlist_val[clients->clientlist.clientlist_len].leader_flag); 
-
+  			clients->clientlist.clientlist_val[clients->clientlist.clientlist_len].leader_flag);
+  clients->clientlist.clientlist_len++;
 	return(clients);
 }
 
@@ -229,19 +229,19 @@ int *send_1_svc(msg_recv *message, struct svc_req *rqstp) {
 	// assign seq#
 	// multicast to clients, on fail/retry:
 	// 		remove client from clist
-	//		multicast exist msg, seq# 
+	//		multicast exist msg, seq#
 
 	//printf("msg_sent after debug, before sd shit %s", msg_buffer[seq_num % MSG_BUF_SIZE].msg_sent);
 	//msg_send sd_message = msg_buffer[seq_num % MSG_BUF_SIZE].msg_sent;
 	//uname sd_user = msg_buffer[seq_num % MSG_BUF_SIZE].user_sent;
 	//printf("before sd message: %s\n", sd_message);
 	//printf("before sd user: %s\n", sd_user);
-	
+
 	// type, sequence, sender, msg
 	mcMessage(
 				msg_buffer[seq_num % MSG_BUF_SIZE].msg_type,
 				msg_buffer[seq_num % MSG_BUF_SIZE].seq_num,
-				msg_buffer[seq_num % MSG_BUF_SIZE].user_sent, 
+				msg_buffer[seq_num % MSG_BUF_SIZE].user_sent,
 				msg_buffer[seq_num % MSG_BUF_SIZE].msg_sent);
 
 	// Knock up seq_num by 1:

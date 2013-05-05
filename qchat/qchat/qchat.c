@@ -84,7 +84,7 @@ msg_recv* parseMessage(char * buf) {
     }
     buf[token] = '\0';
     (*inMsg).msg_type = (unsigned int) strtoul(&(buf[0]), NULL, 10);
-    if ((*inMsg)msg_type == TEXT) {
+    if ((*inMsg).msg_type == TEXT) {
       int nextToken = strcspn(&(buf[++token]), ",");
       if(nextToken > 10) {
         diep("Malformed incoming message at second token");
@@ -103,22 +103,38 @@ msg_recv* parseMessage(char * buf) {
       (*inMsg).msg_sent = strdup(&(buf[token]));
       return inMsg;
     } else if ((*inMsg).msg_type == NEWUSER) {
+      free(inMsg);
       int nextToken = strcspn(&(buf[++token]), ",");
       if(nextToken > 32) {
         diep("Malformed incoming message at second token");
       }
       buf[token + nextToken] = '\0';
-      (*inMsg).seq_num = (unsigned int) strtoul(&(buf[token]), NULL, 10);
+      clientlist->clientlist.clientlist_val[clientlist->clientlist.clientlist_len].userName = (uname) strdup(&(buf[token]));
       token = token+nextToken + 1;
       nextToken = strcspn(&(buf[token]), ",");
-      if(nextToken > 32) {
+      if(nextToken > 16) {
         diep("Malformed incoming message at third token");
       }
       buf[token + nextToken] = '\0';
-      (*inMsg).user_sent = strdup(&(buf[token]));
+      clientlist->clientlist.clientlist_val[clientlist->clientlist.clientlist_len].hostname = (hoststr) strdup(&(buf[token]));
       token = token+nextToken + 1;
+      nextToken = strcspn(&(buf[token]), ",");
+      if(nextToken > 5) {
+        diep("Malformed incoming message at forth token");
+      }
+      buf[token + nextToken] = '\0';
+      clientlist->clientlist.clientlist_val[clientlist->clientlist.clientlist_len].lport = (int) strtol(&(buf[token]), NULL, 10);
+      token = token+nextToken + 1;
+      nextToken = strcspn(&(buf[token]), ",");
+      if(nextToken > 2) {
+        diep("Malformed incoming message at fifth token");
+      }
+      buf[token + nextToken] = '\0';
       buf[BUFLEN-1] = '\0';
-      (*inMsg).msg_sent = strdup(&(buf[token]));
+      clientlist->clientlist.clientlist_val[clientlist->clientlist.clientlist_len].leader_flag = (int) strtol(&(buf[token]), NULL, 10);
+      cname* newUser = &(clientlist->clientlist.clientlist_val[clientlist->clientlist.clientlist_len]);
+      printf("%s joined the chat!\n", &(newUser->userName)[0]);
+      clientlist->clientlist.clientlist_len++;
       return NULL;
     }
 }
@@ -182,7 +198,7 @@ void recvDatagram(void) {
       }
 
     msg_recv* inMsg = parseMessage(&buf);
-    if(msg_recv == NULL) {
+    if(inMsg == NULL) {
       continue;
     }
     hq_push(queue, inMsg);
@@ -331,6 +347,30 @@ int main(int argc, char * argv[]) {
   userdata.lport = HELLO_PORT;
   userdata.leader_flag = isSequencer;
 
+
+  clientlist = malloc(sizeof(clist));
+  if (clientlist == NULL) {
+    printf("Memory allocation for local chat client list failed. Please try again later.\n");
+    return 1;
+  }
+  clientlist->clientlist.clientlist_len=0;
+  alloc_clients_size = INITIAL_CLIENT_COUNT;
+  cname *list_values = (cname*)calloc((size_t)INITIAL_CLIENT_COUNT, sizeof(cname));
+  if (list_values == NULL) {
+    printf("Memory allocation for local chat client list failed. Please try again later.\n");
+    return 1;
+  }
+  clientlist->clientlist.clientlist_val = list_values;
+
+
+  // Message handling thread
+  pthread_t handlerThread;
+  pthread_attr_t attr;
+  pthread_attr_init(&attr);
+  pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
+  pthread_create(&handlerThread, &attr, recvDatagram, NULL);
+
+
   // Call to join_1:
   int* joinResult = join_1(&userdata, clnt);
   if (joinResult == NULL) {
@@ -345,28 +385,6 @@ int main(int argc, char * argv[]) {
     printf("Joining the specified chat failed. Please try again later.\n");
     return 1;
   }
-
-  clientlist = malloc(sizeof(clist));
-  if (clientlist == NULL) {
-    printf("Memory allocation for local chat client list failed. Please try again later.\n");
-    return 1;
-  }
-  clientlist->clientlist.clientlist_len=0;
-  alloc_clients_size = INITIAL_CLIENT_COUNT;
-  cname *list_values = (cname*)calloc((size_t)INITIAL_CLIENT_COUNT, sizeof(cname));
-  if (list_values == NULL) {
-    printf("Memory allocation for local chat client list failed. Please try again later.\n");
-    return 1;
-  }
-  clients->clientlist.clientlist_val = list_values;
-
-
-  // Message handling thread
-  pthread_t handlerThread;
-  pthread_attr_t attr;
-  pthread_attr_init(&attr);
-  pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
-  pthread_create(&handlerThread, &attr, recvDatagram, NULL);
 
   // Election handling thread
   //pthread_t electionThread;
