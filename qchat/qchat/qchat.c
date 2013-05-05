@@ -282,7 +282,7 @@ int main(int argc, char * argv[]) {
   if (pID == 0) {
     execlp("./qchat_svc", NULL, (char *) 0);
   }
-
+  sleep(2);
   // Join Variables:
   cname  userdata;
 
