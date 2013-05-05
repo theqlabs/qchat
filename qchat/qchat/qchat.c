@@ -135,7 +135,15 @@ msg_recv* parseMessage(char * buf) {
       printf("%s joined the chat!\n", &(newUser->userName)[0]);
       clientlist->clientlist.clientlist_len++;
       return NULL;
-    } else if ((*inMsg).msg_type == NEWUSER) {
+    } else if ((*inMsg).msg_type == USEREXIT) {
+      int nextToken = strcspn(&(buf[++token]), ",");
+      if(nextToken > 32) {
+        diep("Malformed incoming message at second token");
+      }
+      buf[token + nextToken] = '\0';
+      uname* userExited = (uname) strdup(&(buf[token]));
+      printf("%s has left the chat.", userExited);
+
 
     }
 }
@@ -428,7 +436,7 @@ int main(int argc, char * argv[]) {
   pthread_kill(handlerThread, SIGTERM);
   //pthread_kill(electionThread, SIGTERM);
 
-  exit_1(NULL, clnt);
+  exit_1(userdata.userName, clnt);
 
   //Terminate RPC process
   if(clnt != NULL) {
