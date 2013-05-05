@@ -154,7 +154,7 @@ void mcClients(uname userName, hoststr hostname, int lport, int leader_flag) {
 	//close(fd);
 }
 
-void mcExit(uname exitingUser) {
+void mcExit(uname *exitingUser) {
 
 	//struct ip_mreq {
 	//    struct in_addr imr_multiaddr; /* multicast group to join */
