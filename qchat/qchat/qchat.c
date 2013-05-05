@@ -27,7 +27,7 @@
 #include "holdback_queue.h"
 
 #define HOLD_Q_SIZE 128
-
+#define INITIAL_CLIENT_COUNT 8
 #define HELLO_PORT 12345
 #define HELLO_GROUP "225.0.0.37"
 #define MSGBUFSIZE 256
@@ -45,6 +45,7 @@ void holdElection();
 const int PORTSTRLEN = 6;
 const int HEARTBEAT_DELAY = 3000;
 int isSequencer = 0;
+int32_t alloc_clients_size;
 CLIENT *clnt;
 clist *clientlist;
 HoldbackQueue *queue;
@@ -84,26 +85,42 @@ msg_recv* parseMessage(char * buf) {
     buf[token] = '\0';
     (*inMsg).msg_type = (unsigned int) strtoul(&(buf[0]), NULL, 10);
     if ((*inMsg)msg_type == TEXT) {
-    int nextToken = strcspn(&(buf[++token]), ",");
-    if(nextToken > 10) {
-      diep("Malformed incoming message at second token");
+      int nextToken = strcspn(&(buf[++token]), ",");
+      if(nextToken > 10) {
+        diep("Malformed incoming message at second token");
+      }
+      buf[token + nextToken] = '\0';
+      (*inMsg).seq_num = (unsigned int) strtoul(&(buf[token]), NULL, 10);
+      token = token+nextToken + 1;
+      nextToken = strcspn(&(buf[token]), ",");
+      if(nextToken > 32) {
+        diep("Malformed incoming message at third token");
+      }
+      buf[token + nextToken] = '\0';
+      (*inMsg).user_sent = strdup(&(buf[token]));
+      token = token+nextToken + 1;
+      buf[BUFLEN-1] = '\0';
+      (*inMsg).msg_sent = strdup(&(buf[token]));
+      return inMsg;
+    } else if ((*inMsg).msg_type == NEWUSER) {
+      int nextToken = strcspn(&(buf[++token]), ",");
+      if(nextToken > 32) {
+        diep("Malformed incoming message at second token");
+      }
+      buf[token + nextToken] = '\0';
+      (*inMsg).seq_num = (unsigned int) strtoul(&(buf[token]), NULL, 10);
+      token = token+nextToken + 1;
+      nextToken = strcspn(&(buf[token]), ",");
+      if(nextToken > 32) {
+        diep("Malformed incoming message at third token");
+      }
+      buf[token + nextToken] = '\0';
+      (*inMsg).user_sent = strdup(&(buf[token]));
+      token = token+nextToken + 1;
+      buf[BUFLEN-1] = '\0';
+      (*inMsg).msg_sent = strdup(&(buf[token]));
+      return NULL;
     }
-    buf[token + nextToken] = '\0';
-    (*inMsg).seq_num = (unsigned int) strtoul(&(buf[token]), NULL, 10);
-    token = token+nextToken + 1;
-    nextToken = strcspn(&(buf[token]), ",");
-    if(nextToken > 32) {
-      diep("Malformed incoming message at third token");
-    }
-    buf[token + nextToken] = '\0';
-    (*inMsg).user_sent = strdup(&(buf[token]));
-    token = token+nextToken + 1;
-    buf[BUFLEN-1] = '\0';
-    (*inMsg).msg_sent = strdup(&(buf[token]));
-    return inMsg;
-  } else if ((*inMsg).msg_type == NEWUSER) {
-
-  }
 }
 
 // Receives UDP packet:
@@ -165,22 +182,14 @@ void recvDatagram(void) {
       }
 
     msg_recv* inMsg = parseMessage(&buf);
+    if(msg_recv == NULL) {
+      continue;
+    }
     hq_push(queue, inMsg);
     msg_recv* nextMsg = hq_pop(queue);
     if(nextMsg == NULL) {
       printf("No messages in the message queue\n");
     }
-<<<<<<< HEAD
-
-     if(expectedSeq == -1) {
-       expectedSeq = (*nextMsg).seq_num;
-     } else if((*nextMsg).seq_num != expectedSeq) {
-      //int toRedeliver = 0;
-      int toRedeliver = (*nextMsg).seq_num ++;
-      while (toRedeliver <= expectedSeq) {
-        printf("redelivering!");
-        nextMsg = redeliver_1(&toRedeliver, clnt);
-=======
     if(expectedSeq == -1) {
       expectedSeq = (*nextMsg).seq_num;
     } else if((*nextMsg).seq_num > expectedSeq) {
@@ -188,7 +197,6 @@ void recvDatagram(void) {
       expectedSeq++;
       while (expectedSeq < targetMsg) {
         nextMsg = redeliver_1(&expectedSeq, clnt);
->>>>>>> 0c42477231dfb305061016d54b00807abf454fc5
         printf("%s: %s\n", (*nextMsg).user_sent, (*nextMsg).msg_sent);
         expectedSeq++;
       }
@@ -338,6 +346,21 @@ int main(int argc, char * argv[]) {
     return 1;
   }
 
+  clientlist = malloc(sizeof(clist));
+  if (clientlist == NULL) {
+    printf("Memory allocation for local chat client list failed. Please try again later.\n");
+    return 1;
+  }
+  clientlist->clientlist.clientlist_len=0;
+  alloc_clients_size = INITIAL_CLIENT_COUNT;
+  cname *list_values = (cname*)calloc((size_t)INITIAL_CLIENT_COUNT, sizeof(cname));
+  if (list_values == NULL) {
+    printf("Memory allocation for local chat client list failed. Please try again later.\n");
+    return 1;
+  }
+  clients->clientlist.clientlist_val = list_values;
+
+
   // Message handling thread
   pthread_t handlerThread;
   pthread_attr_t attr;
@@ -384,7 +407,7 @@ int main(int argc, char * argv[]) {
   pthread_kill(handlerThread, SIGTERM);
   //pthread_kill(electionThread, SIGTERM);
 
-  exit_1(clnt);
+  exit_1(NULL, clnt);
 
   //Terminate RPC process
   if(clnt != NULL) {
