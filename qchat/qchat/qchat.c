@@ -211,6 +211,7 @@ void recvDatagram(void) {
       int targetMsg = (*nextMsg).seq_num;
       expectedSeq++;
       while (expectedSeq < targetMsg) {
+        printf("Redelivery request");
         nextMsg = redeliver_1(&expectedSeq, clnt);
         printf("%s: %s\n", (*nextMsg).user_sent, (*nextMsg).msg_sent);
         expectedSeq++;
@@ -267,10 +268,10 @@ int init_client(char* host) {
 
 int main(int argc, char * argv[]) {
 
-  //pid_t pID = fork();
-  //if (pID == 0) {
-  //  execlp("./qchat_svc", NULL, (char *) 0);
-  //}
+  pid_t pID = fork();
+  if (pID == 0) {
+    execlp("./qchat_svc", NULL, (char *) 0);
+  }
 
   // Join Variables:
   cname  userdata;
