@@ -292,6 +292,8 @@ int *exit_1_svc(uname *user, struct svc_req *rqstp) {
 		init_data_structures();
 	}
 
+	printf("DOES ANYONE SEE THIS?");
+
 	for (i=0; i<clients->clientlist.clientlist_len; i++) {
 		if(strcmp(user, clients->clientlist.clientlist_val[i].userName) == 0) {
 			if(i<(clients->clientlist.clientlist_len-1)) {
