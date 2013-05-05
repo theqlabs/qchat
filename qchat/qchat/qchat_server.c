@@ -1,7 +1,6 @@
 
 //
 // qchat -
-// this is the RPC code executed only by the sequencer
 //
 
 #include <sys/types.h>
@@ -23,10 +22,6 @@
 
 #define INITIAL_CLIENT_COUNT 8
 #define MSG_BUF_SIZE 256
-
-// If DEBUG is set, various debugging statements
-// are triggered to help debug RPC calls mostly
-#define DEBUG
 
 // Global pointer to clist, ptr needed bc of unknown size
 clist *clients;
@@ -159,6 +154,41 @@ void mcClients(uname userName, hoststr hostname, int lport, int leader_flag) {
 	//close(fd);
 }
 
+void mcExit(uname exitingUser) {
+
+	//struct ip_mreq {
+	//    struct in_addr imr_multiaddr; /* multicast group to join */
+	//    struct in_addr imr_interface; /* interface to join on */
+	//}
+
+	struct sockaddr_in addr;
+	int fd, cnt;
+	struct ip_mreq mreq;
+
+
+	/* create what looks like an ordinary UDP socket */
+	if ((fd=socket(AF_INET,SOCK_DGRAM,0)) < 0) {
+		perror("socket");
+		exit(1);
+	}
+
+	/* set up destination address */
+	memset(&addr,0,sizeof(addr));
+	addr.sin_family=AF_INET;
+	addr.sin_addr.s_addr=inet_addr(HELLO_GROUP);
+	addr.sin_port=htons(HELLO_PORT);
+
+	// int sprintf(char * restrict str, const char * restrict format, ...);
+	sprintf(buf, "%d,%s", USEREXIT, exitingUser);
+
+	/* now just sendto() our destination! */
+	if (sendto(fd, buf, sizeof(buf), 0, (struct sockaddr *) &addr, sizeof(addr)) < 0) {
+		perror("sendto");
+		exit(1);
+	}
+	//close(fd);
+}
+
 int *join_1_svc(cname *userdata, struct svc_req *rqstp) {
 
 	int unameErr;
@@ -219,13 +249,6 @@ int *send_1_svc(msg_recv *message, struct svc_req *rqstp) {
 	msg_buffer[seq_num % MSG_BUF_SIZE].seq_num = seq_num;
 	msg_buffer[seq_num % MSG_BUF_SIZE].msg_type = message->msg_type;
 
-	#ifdef DEBUG
-	printf("msg_sent: %s\n", msg_buffer[seq_num % MSG_BUF_SIZE].msg_sent);
-	printf("user_sent:%s\n", msg_buffer[seq_num % MSG_BUF_SIZE].user_sent);
-	printf("seq: %d\n", seq_num);
-	printf("msg_type: %d\n", msg_buffer[seq_num % MSG_BUF_SIZE].msg_type);
-	#endif
-
 	// assign seq#
 	// multicast to clients, on fail/retry:
 	// 		remove client from clist
@@ -260,7 +283,7 @@ msg_recv *redeliver_1_svc(u_int * seq_num, struct svc_req *rqstp) {
 
 }
 
-int *exit_1_svc(void *rpc, struct svc_req *rqstp) {
+int *exit_1_svc(uname *user, struct svc_req *rqstp) {
 
 	// takes in string msg_send from client
 	// returns int (ACK) when done
@@ -275,6 +298,8 @@ int *exit_1_svc(void *rpc, struct svc_req *rqstp) {
 	if (!initialized) {
 		init_data_structures();
 	}
+
+	mcExit(user);
 
 	return(&result);
 }
