@@ -260,7 +260,7 @@ msg_recv *redeliver_1_svc(u_int * seq_num, struct svc_req *rqstp) {
 
 }
 
-int *exit_1_svc(msg_recv *argp, struct svc_req *rqstp) {
+int *exit_1_svc(void *rpc, struct svc_req *rqstp) {
 
 	// takes in string msg_send from client
 	// returns int (ACK) when done

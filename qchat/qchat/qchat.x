@@ -40,7 +40,7 @@ program QCHAT {
     version QCHATVERS {
         int JOIN(cname) = 1;
         int SEND(msg_recv) = 2;
-        int EXIT(msg_recv) = 3;
+        int EXIT(void) = 3;
         msg_recv REDELIVER(unsigned int) = 4;
         unsigned int HEARTBEAT(unsigned int) = 5;
         void SHUTDOWNSERV() = 6;

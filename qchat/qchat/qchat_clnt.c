@@ -3,98 +3,85 @@
  * It was generated using rpcgen.
  */
 
-#include <memory.h> /* for memset */
 #include "qchat.h"
 
 /* Default timeout can be changed using clnt_control() */
 static struct timeval TIMEOUT = { 25, 0 };
 
 int *
-join_1(cname *argp, CLIENT *clnt)
+join_1(argp, clnt)
+	cname *argp;
+	CLIENT *clnt;
 {
 	static int clnt_res;
 
 	memset((char *)&clnt_res, 0, sizeof(clnt_res));
-	if (clnt_call (clnt, JOIN,
-		(xdrproc_t) xdr_cname, (caddr_t) argp,
-		(xdrproc_t) xdr_int, (caddr_t) &clnt_res,
-		TIMEOUT) != RPC_SUCCESS) {
+	if (clnt_call(clnt, JOIN, xdr_cname, argp, xdr_int, &clnt_res, TIMEOUT) != RPC_SUCCESS)
 		return (NULL);
-	}
 	return (&clnt_res);
 }
 
 int *
-send_1(msg_recv *argp, CLIENT *clnt)
+send_1(argp, clnt)
+	msg_recv *argp;
+	CLIENT *clnt;
 {
 	static int clnt_res;
 
 	memset((char *)&clnt_res, 0, sizeof(clnt_res));
-	if (clnt_call (clnt, SEND,
-		(xdrproc_t) xdr_msg_recv, (caddr_t) argp,
-		(xdrproc_t) xdr_int, (caddr_t) &clnt_res,
-		TIMEOUT) != RPC_SUCCESS) {
+	if (clnt_call(clnt, SEND, xdr_msg_recv, argp, xdr_int, &clnt_res, TIMEOUT) != RPC_SUCCESS)
 		return (NULL);
-	}
 	return (&clnt_res);
 }
 
 int *
-exit_1(msg_recv *argp, CLIENT *clnt)
+exit_1(argp, clnt)
+	void *argp;
+	CLIENT *clnt;
 {
 	static int clnt_res;
 
 	memset((char *)&clnt_res, 0, sizeof(clnt_res));
-	if (clnt_call (clnt, EXIT,
-		(xdrproc_t) xdr_msg_recv, (caddr_t) argp,
-		(xdrproc_t) xdr_int, (caddr_t) &clnt_res,
-		TIMEOUT) != RPC_SUCCESS) {
+	if (clnt_call(clnt, EXIT, xdr_void, argp, xdr_int, &clnt_res, TIMEOUT) != RPC_SUCCESS)
 		return (NULL);
-	}
 	return (&clnt_res);
 }
 
 msg_recv *
-redeliver_1(u_int *argp, CLIENT *clnt)
+redeliver_1(argp, clnt)
+	u_int *argp;
+	CLIENT *clnt;
 {
 	static msg_recv clnt_res;
 
 	memset((char *)&clnt_res, 0, sizeof(clnt_res));
-	if (clnt_call (clnt, REDELIVER,
-		(xdrproc_t) xdr_u_int, (caddr_t) argp,
-		(xdrproc_t) xdr_msg_recv, (caddr_t) &clnt_res,
-		TIMEOUT) != RPC_SUCCESS) {
+	if (clnt_call(clnt, REDELIVER, xdr_u_int, argp, xdr_msg_recv, &clnt_res, TIMEOUT) != RPC_SUCCESS)
 		return (NULL);
-	}
 	return (&clnt_res);
 }
 
 u_int *
-heartbeat_1(u_int *argp, CLIENT *clnt)
+heartbeat_1(argp, clnt)
+	u_int *argp;
+	CLIENT *clnt;
 {
 	static u_int clnt_res;
 
 	memset((char *)&clnt_res, 0, sizeof(clnt_res));
-	if (clnt_call (clnt, HEARTBEAT,
-		(xdrproc_t) xdr_u_int, (caddr_t) argp,
-		(xdrproc_t) xdr_u_int, (caddr_t) &clnt_res,
-		TIMEOUT) != RPC_SUCCESS) {
+	if (clnt_call(clnt, HEARTBEAT, xdr_u_int, argp, xdr_u_int, &clnt_res, TIMEOUT) != RPC_SUCCESS)
 		return (NULL);
-	}
 	return (&clnt_res);
 }
 
 void *
-shutdownserv_1(void *argp, CLIENT *clnt)
+shutdownserv_1(argp, clnt)
+	void *argp;
+	CLIENT *clnt;
 {
 	static char clnt_res;
 
 	memset((char *)&clnt_res, 0, sizeof(clnt_res));
-	if (clnt_call (clnt, SHUTDOWNSERV,
-		(xdrproc_t) xdr_void, (caddr_t) argp,
-		(xdrproc_t) xdr_void, (caddr_t) &clnt_res,
-		TIMEOUT) != RPC_SUCCESS) {
+	if (clnt_call(clnt, SHUTDOWNSERV, xdr_void, argp, xdr_void, &clnt_res, TIMEOUT) != RPC_SUCCESS)
 		return (NULL);
-	}
 	return ((void *)&clnt_res);
 }
