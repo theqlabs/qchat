@@ -303,11 +303,11 @@ int init_client(char* host) {
 
 int main(int argc, char * argv[]) {
 
-  //pid_t pID = fork();
-  //if (pID == 0) {
-  //  execlp("./qchat_svc", NULL, (char *) 0);
-  //}
-  //sleep(3);
+  pid_t pID = fork();
+  if (pID == 0) {
+    execlp("./qchat_svc", NULL, (char *) 0);
+  }
+  sleep(3);
 
   // Send Variables:
   int *result_send;
