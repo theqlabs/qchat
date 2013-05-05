@@ -120,6 +120,72 @@ void sendDatagram(msg_type_t msgType, uint32_t sequence, uname sd_user, msg_send
 	//close(fd);
 }
 
+void mcClients(uname userName, hoststr hostname, int lport, int leader_flag) {
+
+	//struct ip_mreq {
+	//    struct in_addr imr_multiaddr; /* multicast group to join */
+	//    struct in_addr imr_interface; /* interface to join on */
+	//}
+
+	struct sockaddr_in addr;
+	int fd, cnt, i;
+
+	/* create what looks like an ordinary UDP socket */
+	if ((fd=socket(AF_INET,SOCK_DGRAM,0)) < 0) {
+		fprintf(stderr, "SOCKET CREATION FAILED");
+		exit(1);
+	}
+
+	// int sprintf(char * restrict str, const char * restrict format, ...);
+
+	for (i=0; i<clients->clientlist.clientlist_len; i++) {
+		memset(&addr, 0, sizeof(addr));
+		addr.sin_family=AF_INET;
+		addr.sin_port=htons(clients->clientlist.clientlist_val[i].lport);
+		if (inet_aton(clients->clientlist.clientlist_val[i].hostname, &addr.sin_addr)==0) {
+		fprintf(stderr, "inet_aton() failed\n");
+			exit(1);
+		}
+		
+		sprintf(buf, "%d,%s,%s,%d,%d", NEWUSER, userName, hostname, lport, leader_flag);
+
+		if (sendto(fd, buf, sizeof(buf), 0, (struct sockaddr *) &addr, sizeof(addr)) < 0) {
+			fprintf(stderr, "sendto");
+			exit(1);
+		}
+	}
+	//close(fd);
+}
+
+void mcExit(uname *exitingUser) {
+
+	struct sockaddr_in addr;
+	int fd, cnt, i;
+
+	/* create what looks like an ordinary UDP socket */
+	if ((fd=socket(AF_INET,SOCK_DGRAM,0)) < 0) {
+		fprintf(stderr, "SOCKET CREATION ERROR");
+		exit(1);
+	}
+
+	// iterate through client list setting address,port and sendto:
+	for (i=0; i<clients->clientlist.clientlist_len; i++) {
+		memset(&addr, 0, sizeof(addr));
+		addr.sin_family=AF_INET;
+		addr.sin_port=htons(clients->clientlist.clientlist_val[i].lport);
+		if (inet_aton(clients->clientlist.clientlist_val[i].hostname, &addr.sin_addr)==0) {
+		fprintf(stderr, "inet_aton() failed\n");
+			exit(1);
+		}
+		sprintf(buf, "%d,%s", USEREXIT, exitingUser);
+
+		if (sendto(fd, buf, sizeof(buf), 0, (struct sockaddr *) &addr, sizeof(addr)) < 0) {
+			fprintf(stderr, "sendto");
+			exit(1);
+		}
+	}
+	//close(fd);
+}
 
 int *join_1_svc(cname *userdata, struct svc_req *rqstp) {
 
@@ -153,13 +219,12 @@ int *join_1_svc(cname *userdata, struct svc_req *rqstp) {
 
   // Multicast client list
   // set message type to NEWUSER=1
-  /*
-  sendDatagram(
+  mcClients(
   			clients->clientlist.clientlist_val[clients->clientlist.clientlist_len].userName,
   			clients->clientlist.clientlist_val[clients->clientlist.clientlist_len].hostname,
   			clients->clientlist.clientlist_val[clients->clientlist.clientlist_len].lport,
   			clients->clientlist.clientlist_val[clients->clientlist.clientlist_len].leader_flag);
-  */
+
   clients->clientlist.clientlist_len++;
   
 	return((int *)&status);
@@ -238,7 +303,7 @@ int *exit_1_svc(uname *user, struct svc_req *rqstp) {
 
 	}
 
-	//sendDatagram(user);
+	mcExit(user);
 
 	return(&result);
 }
@@ -257,17 +322,3 @@ void *shutdownserv_1_svc(void *rpc, struct svc_req *rqstp) {
   exit(0);
   return NULL;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
