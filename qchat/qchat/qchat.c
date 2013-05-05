@@ -446,13 +446,13 @@ int main(int argc, char * argv[]) {
   pthread_kill(handlerThread, SIGTERM);
   //pthread_kill(electionThread, SIGTERM);
 
-  exit_1(userdata.userName, clnt);
+  exit_1(&(userdata.userName), clnt);
 
   //Terminate RPC process
   if(clnt != NULL) {
-    if(userdata.leader_flag == 1) {
-      shutdownserv_1(NULL, clnt);
-    }
+    // if(userdata.leader_flag == 1) {
+    //   shutdownserv_1(NULL, clnt);
+    // }
     clnt_destroy(clnt);
   }
 
