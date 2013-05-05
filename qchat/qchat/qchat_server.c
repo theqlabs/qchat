@@ -285,18 +285,23 @@ msg_recv *redeliver_1_svc(u_int * seq_num, struct svc_req *rqstp) {
 
 int *exit_1_svc(uname *user, struct svc_req *rqstp) {
 
-	// takes in string msg_send from client
-	// returns int (ACK) when done
-
-	// assign seq#
-	// remove from clist, isLeaderCheck:
-	// 		pickNewLeader
-	//		multicast new leader
-	// multicast exist msg, seq#
 	static int result;
+	int i;
 
 	if (!initialized) {
 		init_data_structures();
+	}
+
+	for (i=0; i<clients->clientlist.clientlist_len; i++) {
+		if(strcmp(user, clients->clientlist.clientlist_val[i].userName) == 0) {
+			if(i<(clients->clientlist.clientlist_len-1)) {
+				memmove(&(clients->clientlist.clientlist_val[i]), 
+								&(clients->clientlist.clientlist_val[i+1]), 
+								sizeof(cname)*clients->clientlist.clientlist_len-1-i);
+				break;
+			}
+		}
+
 	}
 
 	mcExit(user);
