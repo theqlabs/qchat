@@ -239,7 +239,8 @@ int *send_1_svc(msg_recv *message, struct svc_req *rqstp) {
 		init_data_structures();
 	}
  	
-	if (message->msg_sent[0] == EOF) {
+
+	if (message->msg_sent == NULL || strlen(message->msg_sent) == 0 || message->msg_sent[0] == EOF) {
 		return(NULL);
 	}
 
