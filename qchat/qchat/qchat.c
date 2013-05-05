@@ -28,8 +28,8 @@
 
 #define HOLD_Q_SIZE 128
 #define INITIAL_CLIENT_COUNT 8
-#define HELLO_PORT 12345
-#define HELLO_GROUP "225.0.0.37"
+//#define HELLO_PORT 9930
+//#define HELLO_GROUP "225.0.0.37"
 #define MSGBUFSIZE 256
 
 // If DEBUG is set, various debugging statements
@@ -48,6 +48,7 @@ int isSequencer = 0;
 int32_t alloc_clients_size;
 CLIENT *clnt;
 clist *clientlist;
+const int LOCALPORT = 10001;
 cname  userdata;
 HoldbackQueue *queue;
 char buf[BUFLEN];
@@ -175,22 +176,23 @@ void recvDatagram(void) {
   u_int yes=1;
 
   /* create what looks like an ordinary UDP socket */
-  if ((fd=socket(AF_INET,SOCK_DGRAM,0)) < 0) {
+  if ((fd=socket(AF_INET,SOCK_DGRAM,IPPROTO_UDP)) < 0) {
     perror("socket");
     exit(1);
   }
 
-  /* allow multiple sockets to use the same PORT number */
+  /*
   if (setsockopt(fd,SOL_SOCKET,SO_REUSEADDR,&yes,sizeof(yes)) < 0) {
     perror("Reusing ADDR failed");
     exit(1);
    }
+   */
 
   /* set up destination address */
   memset(&addr,0,sizeof(addr));
   addr.sin_family=AF_INET;
   addr.sin_addr.s_addr=htonl(INADDR_ANY); /* N.B.: differs from sender */
-  addr.sin_port=htons(HELLO_PORT);
+  addr.sin_port=htons(LOCALPORT);
 
   /* bind to receive address */
   if (bind(fd,(struct sockaddr *) &addr,sizeof(addr)) < 0) {
@@ -199,13 +201,13 @@ void recvDatagram(void) {
   }
 
   /* use setsockopt() to request that the kernel join a multicast group */
-  mreq.imr_multiaddr.s_addr=inet_addr(HELLO_GROUP);
-  mreq.imr_interface.s_addr=htonl(INADDR_ANY);
+  //mreq.imr_multiaddr.s_addr=inet_addr(HELLO_GROUP);
+  //mreq.imr_interface.s_addr=htonl(INADDR_ANY);
 
-  if (setsockopt(fd,IPPROTO_IP,IP_ADD_MEMBERSHIP,&mreq,sizeof(mreq)) < 0) {
-    perror("setsockopt");
-    exit(1);
-  }
+  //if (setsockopt(fd,IPPROTO_IP,IP_ADD_MEMBERSHIP,&mreq,sizeof(mreq)) < 0) {
+  //  perror("setsockopt");
+  //  exit(1);
+  //}
 
      /* now just enter a read-print loop */
   while (1) {
@@ -301,12 +303,11 @@ int init_client(char* host) {
 
 int main(int argc, char * argv[]) {
 
-  pid_t pID = fork();
-  if (pID == 0) {
-    execlp("./qchat_svc", NULL, (char *) 0);
-  }
-  sleep(3);
-
+  //pid_t pID = fork();
+  //if (pID == 0) {
+  //  execlp("./qchat_svc", NULL, (char *) 0);
+  //}
+  //sleep(3);
 
   // Send Variables:
   int *result_send;
@@ -349,7 +350,7 @@ int main(int argc, char * argv[]) {
   if (argc == 3) {
     //Joining an existing chat
     char *remoteHostname = argv[2];
-    printf("%s joining an existing chat on %s, listening on %s:%d\n", argv[1], remoteHostname, localHostname, HELLO_PORT);
+    printf("%s joining an existing chat on %s, listening on %s:%d\n", argv[1], remoteHostname, localHostname, LOCALPORT);
     // create client handle, check health:
     int isClientAlive = init_client(remoteHostname);
     if (isClientAlive == 1) {
@@ -365,7 +366,7 @@ int main(int argc, char * argv[]) {
     }
   } else {
     //Creating a new chat
-    printf("%s started a new chat, listening on %s:%d\n", argv[1], localHostname, HELLO_PORT);
+    printf("%s started a new chat, listening on %s:%d\n", argv[1], localHostname, LOCALPORT);
     isSequencer = 1;
     int isClientAlive = init_client(localHostname);
     if (isClientAlive == 1) {
@@ -377,7 +378,7 @@ int main(int argc, char * argv[]) {
 
   userdata.userName = (uname) argv[1];
   userdata.hostname = (hoststr) localHostname;
-  userdata.lport = HELLO_PORT;
+  userdata.lport = LOCALPORT;
   userdata.leader_flag = isSequencer;
 
 

@@ -17,8 +17,9 @@
 
 #include "qchat.h"
 
-#define HELLO_PORT 12345
-#define HELLO_GROUP "225.0.0.37"
+//#define HELLO_PORT 9930
+//#define HELLO_GROUP "225.0.0.37"
+//#define SRV_IP "127.0.0.1"
 
 #define INITIAL_CLIENT_COUNT 8
 #define MSG_BUF_SIZE 256
@@ -84,110 +85,41 @@ void diep(char *s) {
 }
 
 // Sends UDP packet:
-void mcMessage(msg_type_t msgType, uint32_t sequence, uname sd_user, msg_send sd_message) {
-
-	//struct ip_mreq {
-	//    struct in_addr imr_multiaddr; /* multicast group to join */
-	//    struct in_addr imr_interface; /* interface to join on */
-	//}
+void sendDatagram(msg_type_t msgType, uint32_t sequence, uname sd_user, msg_send sd_message) {
 
 	struct sockaddr_in addr;
-	int fd, cnt;
-	struct ip_mreq mreq;
-	//char *message="Hello, World!";
+	int fd, cnt, i;
 
-	/* create what looks like an ordinary UDP socket */
-	if ((fd=socket(AF_INET,SOCK_DGRAM,0)) < 0) {
-		perror("socket");
+	if ((fd=socket(AF_INET,SOCK_DGRAM,IPPROTO_UDP)) < 0) {
+		fprintf(stderr, "SOCKET CREATION FAILED");
 		exit(1);
 	}
 
 	/* set up destination address */
-	memset(&addr,0,sizeof(addr));
-	addr.sin_family=AF_INET;
-	addr.sin_addr.s_addr=inet_addr(HELLO_GROUP);
-	addr.sin_port=htons(HELLO_PORT);
+	//memset(&addr,0,sizeof(addr));
+	//addr.sin_family=AF_INET;
+	//addr.sin_port=htons(HELLO_PORT);
 
-	// int sprintf(char * restrict str, const char * restrict format, ...);
-	sprintf(buf, "%d,%d,%s,%s", msgType, sequence, sd_user, sd_message);
+	// iterate through client list setting address,port and sendto:
+	for (i=0; i<clients->clientlist.clientlist_len; i++) {
+		memset(&addr, 0, sizeof(addr));
+		addr.sin_family=AF_INET;
+		addr.sin_port=htons(clients->clientlist.clientlist_val[i].lport);
+		if (inet_aton(clients->clientlist.clientlist_val[i].hostname, &addr.sin_addr)==0) {
+		fprintf(stderr, "inet_aton() failed\n");
+			exit(1);
+		}
+		sprintf(buf, "%d,%d,%s,%s", msgType, sequence, sd_user, sd_message);
 
-	/* now just sendto() our destination! */
-	if (sendto(fd, buf, sizeof(buf), 0, (struct sockaddr *) &addr, sizeof(addr)) < 0) {
-		perror("sendto");
-		exit(1);
+		if (sendto(fd, buf, sizeof(buf), 0, (struct sockaddr *) &addr, sizeof(addr)) < 0) {
+			fprintf(stderr, "sendto");
+			exit(1);
+		}
+
 	}
 	//close(fd);
 }
 
-void mcClients(uname userName, hoststr hostname, int lport, int leader_flag) {
-
-	//struct ip_mreq {
-	//    struct in_addr imr_multiaddr; /* multicast group to join */
-	//    struct in_addr imr_interface; /* interface to join on */
-	//}
-
-	struct sockaddr_in addr;
-	int fd, cnt;
-	struct ip_mreq mreq;
-
-
-	/* create what looks like an ordinary UDP socket */
-	if ((fd=socket(AF_INET,SOCK_DGRAM,0)) < 0) {
-		perror("socket");
-		exit(1);
-	}
-
-	/* set up destination address */
-	memset(&addr,0,sizeof(addr));
-	addr.sin_family=AF_INET;
-	addr.sin_addr.s_addr=inet_addr(HELLO_GROUP);
-	addr.sin_port=htons(HELLO_PORT);
-
-	// int sprintf(char * restrict str, const char * restrict format, ...);
-	sprintf(buf, "%d,%s,%s,%d,%d", NEWUSER, userName, hostname, lport, leader_flag);
-
-	/* now just sendto() our destination! */
-	if (sendto(fd, buf, sizeof(buf), 0, (struct sockaddr *) &addr, sizeof(addr)) < 0) {
-		perror("sendto");
-		exit(1);
-	}
-	//close(fd);
-}
-
-void mcExit(uname *exitingUser) {
-
-	//struct ip_mreq {
-	//    struct in_addr imr_multiaddr; /* multicast group to join */
-	//    struct in_addr imr_interface; /* interface to join on */
-	//}
-
-	struct sockaddr_in addr;
-	int fd, cnt;
-	struct ip_mreq mreq;
-
-
-	/* create what looks like an ordinary UDP socket */
-	if ((fd=socket(AF_INET,SOCK_DGRAM,0)) < 0) {
-		perror("socket");
-		exit(1);
-	}
-
-	/* set up destination address */
-	memset(&addr,0,sizeof(addr));
-	addr.sin_family=AF_INET;
-	addr.sin_addr.s_addr=inet_addr(HELLO_GROUP);
-	addr.sin_port=htons(HELLO_PORT);
-
-	// int sprintf(char * restrict str, const char * restrict format, ...);
-	sprintf(buf, "%d,%s", USEREXIT, exitingUser);
-
-	/* now just sendto() our destination! */
-	if (sendto(fd, buf, sizeof(buf), 0, (struct sockaddr *) &addr, sizeof(addr)) < 0) {
-		perror("sendto");
-		exit(1);
-	}
-	//close(fd);
-}
 
 int *join_1_svc(cname *userdata, struct svc_req *rqstp) {
 
@@ -214,7 +146,6 @@ int *join_1_svc(cname *userdata, struct svc_req *rqstp) {
 	clients->clientlist.clientlist_val[clients->clientlist.clientlist_len].lport = userdata->lport;
   clients->clientlist.clientlist_val[clients->clientlist.clientlist_len].leader_flag = userdata->leader_flag;
 
-
 	// if clients struct is empty, then JFAILURE, status_code = 1:
 	if (clients == NULL) {
 		status = 1;
@@ -222,13 +153,16 @@ int *join_1_svc(cname *userdata, struct svc_req *rqstp) {
 
   // Multicast client list
   // set message type to NEWUSER=1
-  mcClients(
+  /*
+  sendDatagram(
   			clients->clientlist.clientlist_val[clients->clientlist.clientlist_len].userName,
   			clients->clientlist.clientlist_val[clients->clientlist.clientlist_len].hostname,
   			clients->clientlist.clientlist_val[clients->clientlist.clientlist_len].lport,
   			clients->clientlist.clientlist_val[clients->clientlist.clientlist_len].leader_flag);
+  */
   clients->clientlist.clientlist_len++;
-	return(clients);
+  
+	return((int *)&status);
 }
 
 int *send_1_svc(msg_recv *message, struct svc_req *rqstp) {
@@ -261,7 +195,7 @@ int *send_1_svc(msg_recv *message, struct svc_req *rqstp) {
 	//printf("before sd user: %s\n", sd_user);
 
 	// type, sequence, sender, msg
-	mcMessage(
+	sendDatagram(
 				msg_buffer[seq_num % MSG_BUF_SIZE].msg_type,
 				msg_buffer[seq_num % MSG_BUF_SIZE].seq_num,
 				msg_buffer[seq_num % MSG_BUF_SIZE].user_sent,
@@ -304,7 +238,7 @@ int *exit_1_svc(uname *user, struct svc_req *rqstp) {
 
 	}
 
-	mcExit(user);
+	//sendDatagram(user);
 
 	return(&result);
 }
