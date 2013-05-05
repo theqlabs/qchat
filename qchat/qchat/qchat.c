@@ -83,6 +83,7 @@ msg_recv* parseMessage(char * buf) {
     }
     buf[token] = '\0';
     (*inMsg).msg_type = (unsigned int) strtoul(&(buf[0]), NULL, 10);
+    if ((*inMsg)msg_type == TEXT) {
     int nextToken = strcspn(&(buf[++token]), ",");
     if(nextToken > 10) {
       diep("Malformed incoming message at second token");
@@ -100,6 +101,9 @@ msg_recv* parseMessage(char * buf) {
     buf[BUFLEN-1] = '\0';
     (*inMsg).msg_sent = strdup(&(buf[token]));
     return inMsg;
+  } else if ((*inMsg).msg_type == NEWUSER) {
+
+  }
 }
 
 // Receives UDP packet:
