@@ -103,7 +103,6 @@ msg_recv* parseMessage(char * buf) {
       (*inMsg).msg_sent = strdup(&(buf[token]));
       return inMsg;
     } else if ((*inMsg).msg_type == NEWUSER) {
-      free(inMsg);
       int nextToken = strcspn(&(buf[++token]), ",");
       if(nextToken > 32) {
         diep("Malformed incoming message at second token");
